@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual Editor Demo</title>
+<!-- Cross-origin stylesheet (loaded without CORS) to exercise the CSS panel's
+     "can't read cross-origin sheet" handling. -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/modern-normalize@3.0.1/modern-normalize.min.css">
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 20px; line-height: 1.5; color: #222; }
+  h1 { color: #1a1a1a; }
+  .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 16px 0; background: #fafafa; }
+  .card h2 { color: #2f6fed; font-size: 22px; }
+</style>
+</head>
+<body>
+  <h1>Welcome to the Visual Editor Demo</h1>
+  <p>This is a sample paragraph you can select and edit. Click "Enable editing" in the top-right corner, then use the "Elements" tab on the right edge to add new elements. Click "Save" (or Ctrl+S) to write your changes back to this file on disk — reload the page afterward to confirm they persisted. Shift+click to select multiple elements at once and batch-edit their styles or delete them together; the breadcrumb bar at the bottom shows the selected element's ancestry.</p>
+  <div class="card">
+    <h2>A card section</h2>
+    <p>Cards can hold headings, paragraphs, images, and other content. Select this card, then add an Image from the Elements panel to drop one inside it.</p>
+  </div>
+  <p style="text-align: center; color: rgb(107, 114, 128); letter-spacing: 1px;">Another standalone paragraph at the bottom of the page.</p>
+
+  <link rel="stylesheet" href="/dist/editor.css">
+  <script src="/dist/editor.js"></script>
+
+
+</body></html>

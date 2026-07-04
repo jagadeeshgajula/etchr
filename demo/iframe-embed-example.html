@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Iframe embed example — onSave callback</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 24px; background: #f3f4f6; color: #1a1a1a; }
+  h1 { font-size: 20px; margin: 0 0 8px; }
+  p.lead { color: #4b5563; margin: 0 0 20px; max-width: 640px; }
+  .layout { display: flex; gap: 20px; align-items: flex-start; }
+  .canvas-frame { border: 1px solid #d1d5db; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 16px rgba(0,0,0,0.08); background: #fff; }
+  iframe { width: 800px; height: 520px; border: none; display: block; }
+  .side { flex: 1; min-width: 280px; }
+  .side h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; margin-bottom: 8px; }
+  #log { background: #111827; color: #d1fae5; font-family: Consolas, monospace; font-size: 12px; padding: 12px; border-radius: 8px; height: 460px; overflow-y: auto; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <h1>React-style canvas embed (onSave callback path)</h1>
+  <p class="lead">
+    This page stands in for a React app: it fetches a stored HTML "template" (hardcoded below, in place of a DB call),
+    renders it inside a sandboxed same-origin <code>&lt;iframe srcdoc&gt;</code>, then injects the editor's script/style
+    into that iframe's own document and wires <code>onSave</code> to a function that just logs the received HTML
+    instead of hitting a real backend — proving the callback contract independent of any server.
+  </p>
+
+  <div class="layout">
+    <div class="canvas-frame">
+      <iframe id="canvas" title="Editable canvas"></iframe>
+    </div>
+    <div class="side">
+      <h2>onSave() call log</h2>
+      <div id="log">(waiting for a save…)</div>
+    </div>
+  </div>
+
+  <script>
+    // Stand-in for: const html = await fetch(`/api/templates/${id}`).then(r => r.text());
+    var templateHTML = [
+      '<!DOCTYPE html>',
+      '<html>',
+      '<head>',
+      '<meta charset="UTF-8" />',
+      '<style>',
+      '  body { font-family: Arial, sans-serif; margin: 20px; color: #222; }',
+      '  .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; background: #fafafa; }',
+      '</style>',
+      '</head>',
+      '<body>',
+      '  <h1>5G Business Overview</h1>',
+      '  <p>This sample content stands in for an AI-generated template fetched from a database by id.</p>',
+      '  <div class="card">',
+      '    <h2>Key metric</h2>',
+      "    <p>Edit this card's text or styles, then click Save in the toolbar (or Ctrl+S).</p>",
+      '  </div>',
+      '</body>',
+      '</html>'
+    ].join('\n');
+
+    var iframe = document.getElementById('canvas');
+    var log = document.getElementById('log');
+
+    function appendLog(line) {
+      var prefix = log.textContent === '(waiting for a save…)' ? '' : log.textContent + '\n\n';
+      log.textContent = prefix + line;
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Load the fetched HTML as-is (no string surgery — injecting <script> tags
+    // via text concatenation into arbitrary HTML is fragile; see below instead).
+    iframe.srcdoc = templateHTML;
+
+    iframe.addEventListener('load', function onFirstLoad() {
+      iframe.removeEventListener('load', onFirstLoad);
+      var idoc = iframe.contentDocument;
+
+      var link = idoc.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = '/dist/editor.css';
+      idoc.head.appendChild(link);
+
+      var script = idoc.createElement('script');
+      script.src = '/dist/editor.js';
+      script.dataset.autoInit = 'false';
+      script.addEventListener('load', function () {
+        // Same-origin srcdoc iframe -> contentWindow is fully reachable, so we
+        // can call VisualEditor.init() directly and pass a real function.
+        iframe.contentWindow.VisualEditor.init({
+          startInEditMode: true,
+          onSave: function (html) {
+            appendLog('[' + new Date().toLocaleTimeString() + '] onSave received ' + html.length + ' chars:\n' + html);
+            // Stand-in for: await fetch(`/api/templates/${id}`, { method: 'PUT', body: html });
+            return new Promise(function (resolve) { setTimeout(resolve, 400); }); // simulate network latency
+            // Rejecting this promise instead would make the editor show its error toast.
+          },
+        });
+      });
+      idoc.body.appendChild(script);
+    });
+  </script>
+</body>
+</html>

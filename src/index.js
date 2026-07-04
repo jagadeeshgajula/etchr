@@ -1,0 +1,168 @@
+import { ROOT_ID, ATTR_IGNORE } from './core/constants.js';
+import { createConfig } from './core/config.js';
+import { createEditorState } from './core/editor-state.js';
+import { createModeController } from './dom/mode-controller.js';
+import { installKeyboardShortcuts } from './dom/keyboard-shortcuts.js';
+import { createMainToolbar } from './ui/main-toolbar.js';
+import { createToolbar } from './ui/toolbar.js';
+import { createStylePanel } from './ui/style-panel.js';
+import { createCssPanel } from './ui/css-panel.js';
+import { createQuickStylePanel } from './ui/quick-style-panel.js';
+import { createElementsPalette } from './ui/elements-palette.js';
+import { createImagePanel } from './ui/image-panel.js';
+import { createBreadcrumbBar } from './ui/breadcrumb-bar.js';
+import { createToastHost } from './ui/toast.js';
+import { button } from './ui/dom-helpers.js';
+import { subscribe } from './core/editor-state.js';
+import { saveNow } from './save/save-client.js';
+import { getCleanHTML } from './serialize/html-serializer.js';
+import * as history from './core/history.js';
+
+let instance = null;
+
+function ensureEditorRoot(doc) {
+  let root = doc.getElementById(ROOT_ID);
+  if (!root) {
+    root = doc.createElement('div');
+    root.id = ROOT_ID;
+    root.setAttribute(ATTR_IGNORE, '');
+    doc.body.appendChild(root);
+  }
+  return root;
+}
+
+function init(options = {}) {
+  if (instance) return instance;
+
+  const doc = options.document || document;
+  const root = doc.body;
+  const editorRoot = ensureEditorRoot(doc);
+  const config = createConfig(options);
+  const state = createEditorState({ root, editorRoot, config });
+
+  const modeController = createModeController(state);
+  const toast = createToastHost(editorRoot);
+
+  const confirmBeforeSave = config.confirmBeforeSave !== undefined ? config.confirmBeforeSave : !config.onSave;
+  const doSave = () => saveNow(state, toast, { confirmOverwrite: confirmBeforeSave });
+  installKeyboardShortcuts(state, { onSave: doSave });
+  const mainToolbar = createMainToolbar(state, modeController, { onSave: doSave });
+  const toolbar = createToolbar(state, modeController);
+  const stylePanel = createStylePanel(state);
+  const cssPanel = createCssPanel(state);
+  const quickPanel = createQuickStylePanel(state);
+  const imagePanel = createImagePanel(state);
+  const breadcrumbBar = createBreadcrumbBar(state, modeController);
+  const palette = createElementsPalette(state, modeController, {
+    // When an image is dropped in, immediately open the image panel so the user
+    // can set its source right away.
+    onImageInserted: () => imagePanel.show(),
+  });
+
+  // Helper: only one styling panel open at a time keeps the canvas uncluttered.
+  const stylingPanels = [stylePanel, cssPanel, quickPanel, imagePanel];
+  const openOnly = (target) => {
+    for (const p of stylingPanels) if (p !== target) p.hide();
+    if (target.isOpen()) target.hide();
+    else target.show();
+  };
+
+  // Per-element toolbar "Style ✨" button — the easy, describe-in-words panel.
+  // Works for both single and multi-select (see quick-style-panel.js).
+  toolbar.appendButton(button(doc, 'Style ✨', () => openOnly(quickPanel)));
+
+  // Per-element toolbar "Font" button toggles the style panel. Also supports
+  // multi-select batch-editing (see style-panel.js).
+  toolbar.appendButton(button(doc, 'Font', () => openOnly(stylePanel)));
+
+  // Per-element toolbar "CSS" button — only meaningful for a single element
+  // (a stylesheet rule matches by selector, not by "which elements are selected").
+  const cssBtn = button(doc, 'CSS', () => openOnly(cssPanel));
+  toolbar.appendButton(cssBtn);
+
+  // Per-element toolbar "Image" button — only meaningful when exactly one <img> is selected.
+  const imageBtn = button(doc, 'Image', () => openOnly(imagePanel));
+  imageBtn.style.display = 'none';
+  toolbar.appendButton(imageBtn);
+  subscribe(state, () => {
+    const single = !toolbar.isMultiSelect();
+    cssBtn.style.display = single ? '' : 'none';
+    imageBtn.style.display = single && imagePanel.isImageSelected() ? '' : 'none';
+    // If the selection just became multi/changed away from an img, close
+    // whichever single-element panel no longer applies.
+    if (!single) {
+      if (cssPanel.isOpen()) cssPanel.hide();
+      if (imagePanel.isOpen() && !imagePanel.isImageSelected()) imagePanel.hide();
+    }
+  });
+
+  // Main-toolbar "Add" button opens the elements palette.
+  const addBtn = button(doc, 'Add', () => palette.toggle());
+  mainToolbar.appendButton(addBtn);
+
+  // Escape closes whichever floating UI is open, in priority order, before
+  // falling back to clearing the selection — never more than one thing per press.
+  doc.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape' || !state.isEditModeEnabled) return;
+    const openPanel = stylingPanels.find((p) => p.isOpen());
+    if (openPanel) {
+      openPanel.hide();
+    } else if (palette.isOpen()) {
+      palette.close();
+    } else if (state.selectedElements.length) {
+      modeController.clearSelection(state);
+    }
+  });
+
+  if (config.startInEditMode) modeController.enable();
+
+  instance = {
+    state,
+    modeController,
+    mainToolbar,
+    toolbar,
+    stylePanel,
+    cssPanel,
+    quickPanel,
+    imagePanel,
+    palette,
+    breadcrumbBar,
+    undo: () => history.undo(state),
+    redo: () => history.redo(state),
+    save: doSave,
+    getCleanHTML: () => getCleanHTML(doc),
+    getState: () => state,
+    destroy() {
+      modeController.disable();
+      editorRoot.remove();
+      instance = null;
+    },
+  };
+  return instance;
+}
+
+function getState() {
+  return instance ? instance.state : null;
+}
+
+// Capture the embedding <script> synchronously: document.currentScript is only
+// valid during initial execution, and becomes null inside a deferred callback.
+const embeddingScript = typeof document !== 'undefined' ? document.currentScript : null;
+
+function autoInit() {
+  const script = embeddingScript;
+  if (script && script.dataset.autoInit === 'false') return;
+  const options = {};
+  if (script && script.dataset.saveEndpoint) options.saveEndpoint = script.dataset.saveEndpoint;
+  init(options);
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoInit);
+  } else {
+    autoInit();
+  }
+}
+
+export { init, getState };

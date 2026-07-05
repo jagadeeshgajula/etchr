@@ -1,6 +1,7 @@
 {
   "0": "index.js",
   "1": "dom-mutator.js",
+  "2": "rule-matcher.js",
   "3": "style-mutator.js",
   "4": "style-suggestions.js",
   "5": "history.js",

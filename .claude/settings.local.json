@@ -21,7 +21,10 @@
       "Bash(netstat -ano)",
       "Bash(taskkill //PID 26252 //F)",
       "Bash(npm remove *)",
-      "Bash(git restore *)"
+      "Bash(git restore *)",
+      "Bash(cd *)",
+      "Bash(graphify explain *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

@@ -15,8 +15,8 @@ No build step is required to *use* it — just the bundled `dist/editor.js` and 
 
 - **Select anything** — hover outline + click-to-select any element on the page.
 - **Drag-to-resize with 8 handles** — the moment you select an element, eight resize handles (four corners + four edge midpoints) appear on its border. Drag any handle to freely resize the element; west/north handles keep the opposite edge visually anchored using margin compensation, so elements in normal document flow resize as you'd expect. Neighboring elements reflow live as you drag, and the whole gesture is a single undo step.
-- **Drag-to-move (freeform canvas)** — drag the *interior* of a selected element (the border stays reserved for the resize handles) to move it anywhere on the page. On the first drag the element is promoted to an absolutely-positioned overlay in page coordinates — the PowerPoint-canvas model — so it lifts out of the document flow and can be placed over, or under, anything else. Frozen at its rendered size so it doesn't collapse, and the whole gesture is one undo step.
-- **Layering (Bring to Front / Send to Back)** — right-click any element for a PowerPoint-style layering menu: **Bring to Front**, **Bring Forward**, **Send Backward**, **Send to Back**. Overlapping elements restack via `z-index` (statically-positioned elements are promoted to `position: relative` first so the change actually takes effect). Every command is a single undo step and serializes into the saved HTML.
+- **Drag-to-move (freeform canvas)** — drag the *interior* of a selected element (the border stays reserved for the resize handles) to move it anywhere on the page. On the first drag the element is promoted to an absolutely-positioned overlay in page coordinates — the PowerPoint-canvas model — so it lifts out of the document flow and can be placed over, or under, anything else. Frozen at its rendered size so it doesn't collapse, placement is pixel-exact regardless of page layout (see deep dive below), and the whole gesture is one undo step.
+- **Layering (Bring to Front / Send to Back)** — right-click any element for a PowerPoint-style layering menu: **Bring to Front**, **Bring Forward**, **Send Backward**, **Send to Back**. Overlapping elements restack via `z-index` (statically-positioned elements are promoted to `position: relative` first so the change actually takes effect). Every command is a single undo step and serializes into the saved HTML. See the deep dive below for the exact stacking algorithm.
 - **Auto-responsive CSS (background)** — resizing an element auto-authors the responsive CSS you'd otherwise write by hand: a `max-width: 100%` safety guard, `flex-wrap: wrap` on a flex parent when a child would overflow, and real `@media` breakpoint rules (tablet ≤768px, mobile ≤480px by default) that cap the element at its new size so the layout holds up on smaller screens. Repeated resizes update the same rules in place instead of piling up duplicates. Fully undoable and emitted into the saved HTML.
 - **Inline text editing** — edit text content directly, plain-text-safe (no pasted markup leaks in).
 - **Font & style panel** — change font family, size, color, weight, alignment, spacing, etc. live.
@@ -181,6 +181,38 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 
 ---
 
+## Drag-to-move & layering — implementation deep dive
+
+These are the two most recently added interactions (v3.0.0). Both build on the same undoable-history engine as everything else, but each has non-obvious mechanics worth documenting in full.
+
+### Drag-to-move (`src/dom/move-controller.js`)
+
+1. **Arming.** The moment a single element is selected, a transparent `moveSurface` div (`src/dom/selection-overlay.js`) is positioned over its interior, just *below* the 8 resize handles in z-order — so edge/corner drags still resize, and only the interior initiates a move. The surface is never shown for the root element (`<body>`), anything that contains the root (e.g. `<html>`), a detached node, or a multi-selection — reparenting any of those would throw or make no sense, so plain click-to-select still works there.
+2. **Threshold.** Pointer travel under 3px (`DRAG_THRESHOLD`) is treated as a plain click, not a drag — `forwardClick()` temporarily hides the surface, uses `elementFromPoint` to find what's actually under the cursor, and forwards the selection (respecting `Shift+Click` for multi-select) so you can still click through to a nested child.
+3. **Promotion (first real drag frame only).** The element is frozen at its exact rendered `width`/`height`, `box-sizing` is forced to `border-box`, all four margin *longhands* are zeroed individually (not the `margin` shorthand — an element that was previously resized may have asymmetric `margin-left`/`margin-top` longhands set, and the shorthand would silently wipe them), and `position` becomes `absolute`. If it isn't already a direct child of the root, it's reparented there (`root.appendChild(t)`) so it floats above the entire document flow and can overlap anything — the PowerPoint-canvas model.
+4. **Measure-and-correct coordinate math.** An absolutely-positioned element is placed relative to its containing block's *padding box* — which is **not** the viewport origin whenever the containing block is centered (e.g. `body { margin: auto }`) or itself positioned. Rather than compute that offset analytically, `promote()` sets a provisional `left/top: 0px`, reads where the element actually landed via `getBoundingClientRect()`, and derives `baseLeft`/`baseTop` as the delta needed to put it back at the exact viewport position it was grabbed at. Every subsequent frame just adds the pointer delta to that base — so placement is pixel-exact regardless of page layout, and there's no rightward/downward drift on repeated moves.
+5. **Live preview.** Every `pointermove` frame calls `previewStyle()` (inline-only, no history entry) and re-runs `overlay.showSelectedMany()` so the outline, resize handles, and move surface stay glued to the live rect.
+6. **Commit (`pointerup`).** All promoted styles are reverted to their captured originals and the node is moved back to its exact original DOM slot *first* — this makes the subsequent history batch a clean, self-contained description rather than a diff against mutated state. Then: the original element path is read, and if the element left its original parent, a `move-element` change (see below) plus the full set of `set-style` changes (position/left/top/size/margin/box-sizing) are bundled into one `batch` — a single `Ctrl+Z` undoes the entire gesture, restoring the element to normal flow.
+7. **`move-element` history entries.** A new change type in `src/dom/dom-mutator.js`. Unlike most changes (which re-render from serialized state), `reparentByPath()` relocates the *live* DOM node — `node.remove()` then `toParent.insertBefore(node, refNode)` — so an in-progress selection, resize, or open panel survives the reparent across undo/redo instead of being invalidated by a fresh clone.
+
+### Layering (`src/dom/layer-mutator.js`)
+
+- **Peers = editable siblings.** Layering only ever restacks an element against `getEditableChildren(el.parentElement)` — the elements it can actually paint-overlap. (Moving is what brings unrelated elements into the same stacking context in the first place.)
+- **`effectiveZ(el)`** reads `getComputedStyle(el).zIndex` and treats `'auto'` or any non-numeric value as `0`.
+- **Static→relative promotion.** `z-index` has no effect on a statically-positioned box, so if the target is `position: static`, it's first promoted to `position: relative` (not `absolute`, unlike the move gesture — this keeps it in normal flow while making stacking take effect).
+- **Bring to Front / Send to Back** jump past every peer in one step: new `z-index` = `max(peers) + 1` or `min(peers) - 1`. A no-op is skipped (no history entry) if the element is already strictly above/below every peer.
+- **Bring Forward / Send Backward** move exactly one step. All peers (including the target) are sorted into the actual paint-order stack — ascending `z-index`, with DOM order breaking ties (a later sibling paints on top at equal `z-index`, matching real browser behavior) — and the target swaps `z-index` with its immediate neighbor in that stack. If the neighbor is tied with the target on `z-index` (so a literal swap wouldn't be visible), the target is nudged ±1 past it instead.
+- **One undo step.** Every command is expressed as `set-style` descriptors (reusing the existing history handler — no new change type was needed) bundled into a single `batch`, and it's included verbatim when the HTML is saved.
+
+### Right-click context menu (`src/ui/context-menu.js`)
+
+- Right-clicking any non-editor element (in edit mode) selects it — if it wasn't already selected — and opens a 4-item menu (**Bring to Front**, **Bring Forward**, **Send Backward**, **Send to Back**) at the cursor, clamped so it never spills past the viewport edge.
+- Right-clicking the transparent move surface is treated as a right-click on the underlying selected element (rather than being swallowed as editor chrome), since the surface visually sits on top of it.
+- The menu dismisses on any outside `pointerdown`, on `scroll`/`resize`, or on `Escape` — which it consumes (`stopPropagation`) so the same keypress doesn't also fall through to the app's own close-panel/clear-selection `Escape` chain.
+- The menu is layering-only by design; **Edit text** / **Delete** remain on the floating per-element toolbar, not duplicated here.
+
+---
+
 ## How it works (architecture notes)
 
 - **Single source of truth for mutations.** Every undoable change (`text-edit`, `set-style`, `add-element`, `remove-element`, `move-element`, `edit-css-rule`, `add-css-rule`, `add-media-rule`, `insert-css-rule`, `set-attribute`, `batch`) is described as data and applied through one `addChange()` / `undo()` / `redo()` engine (`src/core/history.js`). UI modules never mutate the DOM directly — they compute old/new values and dispatch a change. This keeps undo/redo provably consistent.
@@ -202,6 +234,14 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 - Resize handles target a single selected element; multi-select resizing is out of scope.
 - Drag-to-move promotes an element to `position: absolute` and reparents it to `<body>` for true page-global coordinates. Because it leaves its original container, descendant-based CSS (e.g. `.card > .title { … }`) no longer matches it — restyle via the CSS panel if you rely on such rules. Absolute placement uses fixed pixel coordinates, so moved elements are not auto-made-responsive the way resizing is.
 - Layering targets a single element and restacks it only against its own siblings (the elements it can actually overlap); moving is what brings elements into a shared stacking context.
+
+---
+
+## Version history
+
+- **v3.0.0** — Freeform drag-to-move (`enableMove`) and PowerPoint-style layering with a right-click context menu (`enableLayering`): Bring to Front / Bring Forward / Send Backward / Send to Back. New `move-element` history change type; new config options `enableMove` and `enableLayering`. See [Drag-to-move & layering — implementation deep dive](#drag-to-move--layering--implementation-deep-dive) above.
+- **v2.0.0** — Drag-to-resize with 8 handles (`enableResize`) and auto-generated responsive CSS on resize (`autoResponsiveCss`, `resizeMinSize`, `responsiveBreakpoints`).
+- **v1.0.0** — Initial release: selection, inline text editing, font/style panel, describe-a-style (NL → CSS), element-aware suggestions, add/remove elements palette, image handling, CSS rule editor, full undo/redo, multi-select, clean save.
 
 ---
 

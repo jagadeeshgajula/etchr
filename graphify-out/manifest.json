@@ -5,8 +5,8 @@
     "semantic_hash": "598cb075410bcd95220ac90bbb60344a"
   },
   ".claude/settings.local.json": {
-    "mtime": 1783254319.966339,
-    "ast_hash": "f9e7cafdf4ffbd2f01195f74d4e47d9d",
+    "mtime": 1783255983.6761332,
+    "ast_hash": "9110c71e81bb1e82c30a321c02d2cdb2",
     "semantic_hash": ""
   },
   "esbuild.config.mjs": {
@@ -15,8 +15,8 @@
     "semantic_hash": "ee4c965f20e5764cc965b6fc7a11b05c"
   },
   "package.json": {
-    "mtime": 1783246753.581124,
-    "ast_hash": "8efd288c37ffea0e91e0d5b41ff2c54c",
+    "mtime": 1783255491.3439522,
+    "ast_hash": "227cc9522b02f08afd2fbc0389cdf94b",
     "semantic_hash": ""
   },
   "server/save-page.js": {
@@ -220,8 +220,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1783251798.645391,
-    "ast_hash": "6e207d5cf4f8dac71f7e21314381d0b8",
+    "mtime": 1783256063.6057062,
+    "ast_hash": "1bfe18e509b4971ffe2c5af5cd61b331",
     "semantic_hash": ""
   },
   "demo/demo.html": {

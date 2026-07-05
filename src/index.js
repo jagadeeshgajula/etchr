@@ -2,6 +2,7 @@ import { ROOT_ID, ATTR_IGNORE } from './core/constants.js';
 import { createConfig } from './core/config.js';
 import { createEditorState } from './core/editor-state.js';
 import { createModeController } from './dom/mode-controller.js';
+import { createResizeController } from './dom/resize-controller.js';
 import { installKeyboardShortcuts } from './dom/keyboard-shortcuts.js';
 import { createMainToolbar } from './ui/main-toolbar.js';
 import { createToolbar } from './ui/toolbar.js';
@@ -41,6 +42,9 @@ function init(options = {}) {
   const state = createEditorState({ root, editorRoot, config });
 
   const modeController = createModeController(state);
+  const resizeController = config.enableResize !== false
+    ? createResizeController(state, modeController.overlay, config)
+    : null;
   const toast = createToastHost(editorRoot);
 
   const confirmBeforeSave = config.confirmBeforeSave !== undefined ? config.confirmBeforeSave : !config.onSave;
@@ -119,6 +123,7 @@ function init(options = {}) {
   instance = {
     state,
     modeController,
+    resizeController,
     mainToolbar,
     toolbar,
     stylePanel,
@@ -134,6 +139,7 @@ function init(options = {}) {
     getState: () => state,
     destroy() {
       modeController.disable();
+      if (resizeController) resizeController.destroy();
       editorRoot.remove();
       instance = null;
     },

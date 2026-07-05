@@ -28,6 +28,38 @@
   box-shadow: 0 0 0 1px rgba(47, 111, 237, 0.3);
 }
 
+.vve-resize-handle {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border: 1px solid #2f6fed;
+  border-radius: 2px;
+  box-sizing: border-box;
+  z-index: 2147483001;
+  pointer-events: auto;
+}
+
+.vve-resize-handle-nw,
+.vve-resize-handle-se {
+  cursor: nwse-resize;
+}
+
+.vve-resize-handle-ne,
+.vve-resize-handle-sw {
+  cursor: nesw-resize;
+}
+
+.vve-resize-handle-n,
+.vve-resize-handle-s {
+  cursor: ns-resize;
+}
+
+.vve-resize-handle-e,
+.vve-resize-handle-w {
+  cursor: ew-resize;
+}
+
 .vve-main-toolbar {
   position: fixed;
   top: 12px;

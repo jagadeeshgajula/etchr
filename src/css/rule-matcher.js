@@ -102,3 +102,26 @@ export function resolveRule(doc, sheetIndex, mediaPath, ruleIndex) {
   }
   return rules[ruleIndex] || null;
 }
+
+/**
+ * Resolves the rule CONTAINER (a CSSStyleSheet, or a nested CSSMediaRule/
+ * grouping rule) addressed by walking mediaPath — not a leaf rule. Both
+ * CSSStyleSheet and CSSMediaRule expose .cssRules/.insertRule()/.deleteRule(),
+ * so callers can insert/delete into whichever one this resolves to uniformly.
+ */
+export function resolveRuleContainer(doc, sheetIndex, mediaPath) {
+  let container = doc.styleSheets[sheetIndex];
+  if (!container) return null;
+  for (const idx of mediaPath) {
+    let rules;
+    try {
+      rules = container.cssRules;
+    } catch {
+      return null;
+    }
+    const grouping = rules && rules[idx];
+    if (!grouping || !grouping.cssRules) return null;
+    container = grouping;
+  }
+  return container;
+}

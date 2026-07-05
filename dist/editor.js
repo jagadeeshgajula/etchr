@@ -65,6 +65,13 @@ var VisualEditor = (() => {
       confirmBeforeSave: void 0,
       startInEditMode: false,
       debounceMs: DEFAULT_DEBOUNCE_MS,
+      // Resize handles on the selection outline, and whether resizing an
+      // element auto-injects reflow fixes + @media breakpoint rules so layout
+      // holds up across viewport sizes without hand-written responsive CSS.
+      enableResize: true,
+      autoResponsiveCss: true,
+      resizeMinSize: 24,
+      responsiveBreakpoints: ["tablet", "mobile"],
       fontFamilies: [...WEB_SAFE_FONTS],
       googleFonts: [...GOOGLE_FONTS],
       containerTags: CONTAINER_TAGS,
@@ -100,6 +107,8 @@ var VisualEditor = (() => {
   }
 
   // src/dom/selection-overlay.js
+  var HANDLE_DIRS = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
+  var HANDLE_SIZE = 8;
   function createSelectionOverlay(editorRoot) {
     const doc = editorRoot.ownerDocument;
     const hover = doc.createElement("div");
@@ -117,6 +126,42 @@ var VisualEditor = (() => {
         editorRoot.appendChild(div);
         selectedPool.push(div);
       }
+    }
+    const handles = HANDLE_DIRS.map((dir) => {
+      const div = doc.createElement("div");
+      div.className = `${cls("resize-handle")} ${cls("resize-handle-" + dir)}`;
+      div.dataset.vveResizeDir = dir;
+      div.setAttribute(ATTR_IGNORE, "");
+      div.style.display = "none";
+      editorRoot.appendChild(div);
+      return { el: div, dir };
+    });
+    function positionHandles(targetEl) {
+      if (!targetEl || !targetEl.isConnected) {
+        hideHandles();
+        return;
+      }
+      const r = targetEl.getBoundingClientRect();
+      const half = HANDLE_SIZE / 2;
+      const at = {
+        nw: [r.top, r.left],
+        n: [r.top, r.left + r.width / 2],
+        ne: [r.top, r.right],
+        e: [r.top + r.height / 2, r.right],
+        se: [r.bottom, r.right],
+        s: [r.bottom, r.left + r.width / 2],
+        sw: [r.bottom, r.left],
+        w: [r.top + r.height / 2, r.left]
+      };
+      handles.forEach(({ el, dir }) => {
+        const [top, left] = at[dir];
+        el.style.display = "block";
+        el.style.top = `${top - half}px`;
+        el.style.left = `${left - half}px`;
+      });
+    }
+    function hideHandles() {
+      handles.forEach(({ el }) => el.style.display = "none");
     }
     function positionOverlay(overlayEl, targetEl) {
       if (!targetEl || !targetEl.isConnected) {
@@ -136,9 +181,12 @@ var VisualEditor = (() => {
         if (i < elements.length) positionOverlay(div, elements[i]);
         else div.style.display = "none";
       });
+      if (elements.length === 1 && elements[0].isConnected) positionHandles(elements[0]);
+      else hideHandles();
     }
     function hideSelected() {
       selectedPool.forEach((div) => div.style.display = "none");
+      hideHandles();
     }
     return {
       showHover(el) {
@@ -149,6 +197,7 @@ var VisualEditor = (() => {
       },
       showSelectedMany,
       hideSelected,
+      handles,
       reposition(hoveredEl, selectedElements) {
         positionOverlay(hover, hoveredEl);
         showSelectedMany(selectedElements || []);
@@ -156,6 +205,7 @@ var VisualEditor = (() => {
       destroy() {
         hover.remove();
         selectedPool.forEach((d2) => d2.remove());
+        handles.forEach(({ el }) => el.remove());
       }
     };
   }
@@ -345,6 +395,686 @@ var VisualEditor = (() => {
       node = node.parentElement;
     }
     return chain[0] === root ? chain : [];
+  }
+
+  // src/dom/style-mutator.js
+  function applyStyle(el, property, value) {
+    if (value === null || value === "") {
+      el.style.removeProperty(property);
+    } else {
+      el.style.setProperty(property, value);
+    }
+  }
+  registerHandler("set-style", {
+    forward(state, entry) {
+      const el = fromPath(entry.elementPath, state.root);
+      if (el) applyStyle(el, entry.property, entry.newValue);
+    },
+    inverse(state, entry) {
+      const el = fromPath(entry.elementPath, state.root);
+      if (el) applyStyle(el, entry.property, entry.oldValue);
+    }
+  });
+  function readInlineValue(el, property) {
+    const v = el.style.getPropertyValue(property);
+    return v === "" ? null : v;
+  }
+  function previewStyle(el, property, value) {
+    applyStyle(el, property, value);
+  }
+  function commitStyle(state, el, property, oldValue, newValue) {
+    const normOld = oldValue === "" ? null : oldValue;
+    const normNew = newValue === "" ? null : newValue;
+    if (normOld === normNew) return;
+    const path = toPath(el, state.root);
+    if (!path) return;
+    addChange(state, { type: "set-style", elementPath: path, property, oldValue: normOld, newValue: normNew });
+  }
+  function describeStyleChanges(state, el, entries) {
+    const path = toPath(el, state.root);
+    if (!path) return [];
+    const children = [];
+    for (const { property, oldValue, newValue } of entries) {
+      const normOld = oldValue === "" ? null : oldValue;
+      const normNew = newValue === "" || newValue == null ? null : newValue;
+      if (normOld === normNew) continue;
+      children.push({ type: "set-style", elementPath: path, property, oldValue: normOld, newValue: normNew });
+    }
+    return children;
+  }
+  function applyStyleBatch(state, el, declarations, label = "style") {
+    const path = toPath(el, state.root);
+    if (!path) return;
+    const children = [];
+    for (const { property, value } of declarations) {
+      const cur = el.style.getPropertyValue(property);
+      const oldValue = cur === "" ? null : cur;
+      const newValue = value === "" || value == null ? null : value;
+      if (oldValue === newValue) continue;
+      children.push({ type: "set-style", elementPath: path, property, oldValue, newValue });
+    }
+    if (!children.length) return;
+    addChange(state, { type: "batch", label, children });
+  }
+  function removeInlineStyle(state, el, property) {
+    commitStyle(state, el, property, readInlineValue(el, property), null);
+  }
+  function applyStyleToMany(state, elements, property, value, label = "style") {
+    const children = [];
+    for (const el of elements) {
+      const path = toPath(el, state.root);
+      if (!path) continue;
+      const cur = el.style.getPropertyValue(property);
+      const oldValue = cur === "" ? null : cur;
+      const newValue = value === "" || value == null ? null : value;
+      if (oldValue === newValue) continue;
+      children.push({ type: "set-style", elementPath: path, property, oldValue, newValue });
+    }
+    if (!children.length) return;
+    addChange(state, { type: "batch", label, children });
+  }
+  function applyStyleBatchToMany(state, elements, declarations, label = "style") {
+    const children = [];
+    for (const el of elements) {
+      const path = toPath(el, state.root);
+      if (!path) continue;
+      for (const { property, value } of declarations) {
+        const cur = el.style.getPropertyValue(property);
+        const oldValue = cur === "" ? null : cur;
+        const newValue = value === "" || value == null ? null : value;
+        if (oldValue === newValue) continue;
+        children.push({ type: "set-style", elementPath: path, property, oldValue, newValue });
+      }
+    }
+    if (!children.length) return;
+    addChange(state, { type: "batch", label, children });
+  }
+  function listInlineStyles(el) {
+    const out = [];
+    for (let i = 0; i < el.style.length; i++) {
+      const name = el.style[i];
+      out.push({ name, value: el.style.getPropertyValue(name), priority: el.style.getPropertyPriority(name) });
+    }
+    return out;
+  }
+
+  // src/css/element-selector.js
+  var counter = 0;
+  var seeded = false;
+  function seedCounter(doc) {
+    let max = 0;
+    doc.querySelectorAll("[class]").forEach((el) => {
+      el.classList.forEach((c) => {
+        const m = /^vve-r(\d+)$/.exec(c);
+        if (m) max = Math.max(max, parseInt(m[1], 10));
+      });
+    });
+    counter = max;
+    seeded = true;
+  }
+  function existingStableClass(el) {
+    for (const c of el.classList) {
+      if (/^vve-r\d+$/.test(c)) return c;
+    }
+    return null;
+  }
+  function describeStableSelector(state, el) {
+    const existing = existingStableClass(el);
+    if (existing) return { selector: `.${existing}`, descriptor: null };
+    const doc = state.root.ownerDocument;
+    if (!seeded) seedCounter(doc);
+    const path = toPath(el, state.root);
+    if (!path) return { selector: null, descriptor: null };
+    counter += 1;
+    const name = `vve-r${counter}`;
+    const currentClass = el.getAttribute("class");
+    const newClass = currentClass ? `${currentClass} ${name}` : name;
+    return {
+      selector: `.${name}`,
+      descriptor: { type: "set-attribute", elementPath: path, attribute: "class", oldValue: currentClass, newValue: newClass }
+    };
+  }
+
+  // src/css/specificity.js
+  function splitSelectorList(selectorText) {
+    const parts = [];
+    let depth = 0;
+    let current = "";
+    for (const ch of selectorText) {
+      if (ch === "(" || ch === "[") depth++;
+      else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
+      if (ch === "," && depth === 0) {
+        parts.push(current.trim());
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+    if (current.trim()) parts.push(current.trim());
+    return parts;
+  }
+  function computeSpecificity(selector) {
+    let a = 0;
+    let b = 0;
+    let c = 0;
+    let s = selector;
+    s = s.replace(/:where\([^)]*\)/gi, " ");
+    const funcRe = /:(is|not|has|matches)\(([^()]*)\)/gi;
+    let m;
+    while ((m = funcRe.exec(s)) !== null) {
+      const branches = splitSelectorList(m[2]);
+      let best = { a: 0, b: 0, c: 0 };
+      for (const branch of branches) {
+        const spec = computeSpecificity(branch);
+        if (compareSpecificity(spec, best) > 0) best = spec;
+      }
+      a += best.a;
+      b += best.b;
+      c += best.c;
+    }
+    s = s.replace(funcRe, " ");
+    const ids = s.match(/#[\w-]+/g);
+    if (ids) a += ids.length;
+    s = s.replace(/#[\w-]+/g, " ");
+    const classes = s.match(/\.[\w-]+/g);
+    if (classes) b += classes.length;
+    s = s.replace(/\.[\w-]+/g, " ");
+    const attrs = s.match(/\[[^\]]+\]/g);
+    if (attrs) b += attrs.length;
+    s = s.replace(/\[[^\]]+\]/g, " ");
+    const pseudoEls = s.match(/::[\w-]+/g);
+    if (pseudoEls) c += pseudoEls.length;
+    s = s.replace(/::[\w-]+/g, " ");
+    const pseudoClasses = s.match(/:[\w-]+/g);
+    if (pseudoClasses) b += pseudoClasses.length;
+    s = s.replace(/:[\w-]+/g, " ");
+    const types = s.match(/[a-zA-Z][\w-]*/g);
+    if (types) c += types.length;
+    return { a, b, c };
+  }
+  function compareSpecificity(x, y) {
+    if (x.a !== y.a) return x.a - y.a;
+    if (x.b !== y.b) return x.b - y.b;
+    return x.c - y.c;
+  }
+  function formatSpecificity(spec) {
+    return `${spec.a},${spec.b},${spec.c}`;
+  }
+
+  // src/css/rule-matcher.js
+  function readProperties(style) {
+    const props = [];
+    for (let i = 0; i < style.length; i++) {
+      const name = style[i];
+      props.push({
+        name,
+        value: style.getPropertyValue(name),
+        priority: style.getPropertyPriority(name)
+      });
+    }
+    return props;
+  }
+  function bestMatchSpecificity(el, selectorText) {
+    let best = null;
+    for (const branch of splitSelectorList(selectorText)) {
+      let matches = false;
+      try {
+        matches = el.matches(branch);
+      } catch {
+        matches = false;
+      }
+      if (matches) {
+        const spec = computeSpecificity(branch);
+        if (!best || compareSpecificity(spec, best) > 0) best = spec;
+      }
+    }
+    return best;
+  }
+  function isGroupingRule(rule) {
+    return !!rule.cssRules && (!!rule.media || rule.conditionText != null);
+  }
+  function walkRuleList(rules, el, sheetIndex, mediaPath, conditionText, out) {
+    for (let i = 0; i < rules.length; i++) {
+      const rule = rules[i];
+      if (isGroupingRule(rule)) {
+        const cond = rule.media ? `@media ${rule.media.mediaText}` : `@supports ${rule.conditionText}`;
+        walkRuleList(rule.cssRules, el, sheetIndex, mediaPath.concat(i), cond, out);
+        continue;
+      }
+      if (rule.selectorText != null && rule.style) {
+        const spec = bestMatchSpecificity(el, rule.selectorText);
+        if (spec) {
+          out.push({
+            sheetIndex,
+            mediaPath,
+            ruleIndex: i,
+            selectorText: rule.selectorText,
+            specificity: spec,
+            conditionText,
+            properties: readProperties(rule.style),
+            rule
+          });
+        }
+      }
+    }
+  }
+  function getMatchingRules(doc, el) {
+    const matched = [];
+    const inaccessible = [];
+    const sheets = doc.styleSheets;
+    for (let s = 0; s < sheets.length; s++) {
+      const sheet = sheets[s];
+      let rules;
+      try {
+        rules = sheet.cssRules;
+      } catch {
+        inaccessible.push({ sheetIndex: s, href: sheet.href || "(inline)" });
+        continue;
+      }
+      if (!rules) continue;
+      walkRuleList(rules, el, s, [], null, matched);
+    }
+    matched.sort((a, b) => compareSpecificity(b.specificity, a.specificity));
+    return { matched, inaccessible };
+  }
+  function resolveRule(doc, sheetIndex, mediaPath, ruleIndex) {
+    const sheet = doc.styleSheets[sheetIndex];
+    if (!sheet) return null;
+    let rules;
+    try {
+      rules = sheet.cssRules;
+    } catch {
+      return null;
+    }
+    for (const idx of mediaPath) {
+      const grouping = rules[idx];
+      if (!grouping || !grouping.cssRules) return null;
+      rules = grouping.cssRules;
+    }
+    return rules[ruleIndex] || null;
+  }
+  function resolveRuleContainer(doc, sheetIndex, mediaPath) {
+    let container = doc.styleSheets[sheetIndex];
+    if (!container) return null;
+    for (const idx of mediaPath) {
+      let rules;
+      try {
+        rules = container.cssRules;
+      } catch {
+        return null;
+      }
+      const grouping = rules && rules[idx];
+      if (!grouping || !grouping.cssRules) return null;
+      container = grouping;
+    }
+    return container;
+  }
+
+  // src/css/stylesheet-registry.js
+  function getOrCreateEditableStylesheet(state) {
+    const existing = state.editableStylesheet;
+    if (existing && existing.ownerNode && existing.ownerNode.isConnected) return existing;
+    const doc = state.root.ownerDocument;
+    let styleEl = doc.querySelector(`style[${ATTR_CREATED_SHEET}]`);
+    if (!styleEl) {
+      styleEl = doc.createElement("style");
+      styleEl.setAttribute(ATTR_CREATED_SHEET, "");
+      doc.head.appendChild(styleEl);
+    }
+    state.editableStylesheet = styleEl.sheet;
+    return state.editableStylesheet;
+  }
+  function indexOfSheet(doc, sheet) {
+    for (let i = 0; i < doc.styleSheets.length; i++) {
+      if (doc.styleSheets[i] === sheet) return i;
+    }
+    return -1;
+  }
+  function findTopLevelMediaRuleIndex(sheet, mediaText) {
+    for (let i = 0; i < sheet.cssRules.length; i++) {
+      const rule = sheet.cssRules[i];
+      if (rule.media && rule.media.mediaText === mediaText) return i;
+    }
+    return -1;
+  }
+  function ensureMediaRule(state, mediaText) {
+    const doc = state.root.ownerDocument;
+    const sheet = getOrCreateEditableStylesheet(state);
+    const sheetIndex = indexOfSheet(doc, sheet);
+    const existingIndex = findTopLevelMediaRuleIndex(sheet, mediaText);
+    if (existingIndex !== -1) return { sheetIndex, mediaPath: [existingIndex], descriptor: null };
+    const ruleIndex = sheet.cssRules.length;
+    return {
+      sheetIndex,
+      mediaPath: [ruleIndex],
+      descriptor: { type: "add-media-rule", sheetIndex, ruleIndex, mediaText }
+    };
+  }
+
+  // src/css/css-mutator.js
+  function setOrRemove(style, property, value, priority) {
+    if (value === null || value === "") {
+      style.removeProperty(property);
+    } else {
+      style.setProperty(property, value, priority || "");
+    }
+  }
+  registerHandler("edit-css-rule", {
+    forward(state, entry) {
+      const rule = resolveRule(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath, entry.ruleIndex);
+      if (rule) setOrRemove(rule.style, entry.property, entry.newValue, entry.newPriority);
+    },
+    inverse(state, entry) {
+      const rule = resolveRule(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath, entry.ruleIndex);
+      if (rule) setOrRemove(rule.style, entry.property, entry.oldValue, entry.oldPriority);
+    }
+  });
+  registerHandler("add-css-rule", {
+    forward(state, entry) {
+      const rule = resolveRule(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath, entry.ruleIndex);
+      if (rule && rule.selectorText === entry.selectorText) return;
+      const sheet = state.root.ownerDocument.styleSheets[entry.sheetIndex];
+      if (!sheet) return;
+      const body = entry.properties.map((p) => `${p.name}: ${p.value}${p.priority ? " !" + p.priority : ""};`).join(" ");
+      sheet.insertRule(`${entry.selectorText} { ${body} }`, entry.ruleIndex);
+    },
+    inverse(state, entry) {
+      const sheet = state.root.ownerDocument.styleSheets[entry.sheetIndex];
+      if (sheet) sheet.deleteRule(entry.ruleIndex);
+    }
+  });
+  registerHandler("add-media-rule", {
+    forward(state, entry) {
+      const sheet = state.root.ownerDocument.styleSheets[entry.sheetIndex];
+      if (!sheet) return;
+      const already = sheet.cssRules[entry.ruleIndex];
+      if (already && already.media && already.media.mediaText === entry.mediaText) return;
+      sheet.insertRule(`@media ${entry.mediaText} { }`, entry.ruleIndex);
+    },
+    inverse(state, entry) {
+      const sheet = state.root.ownerDocument.styleSheets[entry.sheetIndex];
+      if (sheet) sheet.deleteRule(entry.ruleIndex);
+    }
+  });
+  registerHandler("insert-css-rule", {
+    forward(state, entry) {
+      const container = resolveRuleContainer(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath);
+      if (!container) return;
+      const existing = container.cssRules[entry.ruleIndex];
+      if (existing && existing.selectorText === entry.selectorText) return;
+      const body = entry.properties.map((p) => `${p.name}: ${p.value}${p.priority ? " !" + p.priority : ""};`).join(" ");
+      container.insertRule(`${entry.selectorText} { ${body} }`, entry.ruleIndex);
+    },
+    inverse(state, entry) {
+      const container = resolveRuleContainer(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath);
+      if (container) container.deleteRule(entry.ruleIndex);
+    }
+  });
+  function commitCssEdit(state, address, property, newValue, newPriority = "") {
+    const rule = resolveRule(state.root.ownerDocument, address.sheetIndex, address.mediaPath, address.ruleIndex);
+    if (!rule) return;
+    const oldRaw = rule.style.getPropertyValue(property);
+    const oldValue = oldRaw === "" ? null : oldRaw;
+    const oldPriority = rule.style.getPropertyPriority(property);
+    const normNew = newValue === "" ? null : newValue;
+    if (oldValue === normNew && oldPriority === newPriority) return;
+    addChange(state, {
+      type: "edit-css-rule",
+      sheetIndex: address.sheetIndex,
+      mediaPath: address.mediaPath,
+      ruleIndex: address.ruleIndex,
+      property,
+      oldValue,
+      oldPriority,
+      newValue: normNew,
+      newPriority
+    });
+  }
+  function addCssRule(state, selectorText) {
+    const doc = state.root.ownerDocument;
+    const sheet = getOrCreateEditableStylesheet(state);
+    const sheetIndex = indexOfSheet(doc, sheet);
+    if (sheetIndex === -1) return null;
+    const ruleIndex = sheet.cssRules.length;
+    addChange(state, {
+      type: "add-css-rule",
+      sheetIndex,
+      mediaPath: [],
+      ruleIndex,
+      selectorText,
+      properties: []
+    });
+    return { sheetIndex, mediaPath: [], ruleIndex };
+  }
+  function describeResponsiveUpsert(state, mediaText, selectorText, declarations, pendingInserts) {
+    const doc = state.root.ownerDocument;
+    const { sheetIndex, mediaPath, descriptor: mediaDescriptor } = ensureMediaRule(state, mediaText);
+    const children = [];
+    const containerKey = `${sheetIndex}:${mediaPath.join(".")}`;
+    if (mediaDescriptor) {
+      if (!pendingInserts.has(containerKey)) children.push(mediaDescriptor);
+    } else {
+      const container = resolveRuleContainer(doc, sheetIndex, mediaPath);
+      const rules = container ? container.cssRules : [];
+      let foundIndex = -1;
+      for (let i = 0; i < rules.length; i++) {
+        if (rules[i].selectorText === selectorText) {
+          foundIndex = i;
+          break;
+        }
+      }
+      if (foundIndex !== -1) {
+        const rule = rules[foundIndex];
+        for (const { name, value } of declarations) {
+          const oldRaw = rule.style.getPropertyValue(name);
+          const oldValue = oldRaw === "" ? null : oldRaw;
+          if (oldValue === value) continue;
+          children.push({
+            type: "edit-css-rule",
+            sheetIndex,
+            mediaPath,
+            ruleIndex: foundIndex,
+            property: name,
+            oldValue,
+            oldPriority: "",
+            newValue: value,
+            newPriority: ""
+          });
+        }
+        return children;
+      }
+    }
+    const baseCount = mediaDescriptor ? 0 : resolveRuleContainer(doc, sheetIndex, mediaPath).cssRules.length;
+    const already = pendingInserts.get(containerKey) || 0;
+    const ruleIndex = baseCount + already;
+    pendingInserts.set(containerKey, already + 1);
+    children.push({
+      type: "insert-css-rule",
+      sheetIndex,
+      mediaPath,
+      ruleIndex,
+      selectorText,
+      properties: declarations.map((d2) => ({ name: d2.name, value: d2.value, priority: "" }))
+    });
+    return children;
+  }
+
+  // src/dom/responsive-injector.js
+  var BREAKPOINTS = [
+    { name: "tablet", mediaText: "(max-width: 768px)" },
+    { name: "mobile", mediaText: "(max-width: 480px)" }
+  ];
+  function describeResponsiveInjection(state, target, { widthChanged, widthPx, usedWestMargin }, config) {
+    const children = [];
+    const win = state.root.ownerDocument.defaultView;
+    children.push(
+      ...describeStyleChanges(state, target, [{ property: "max-width", oldValue: readInlineValue(target, "max-width"), newValue: "100%" }])
+    );
+    const parent = target.parentElement;
+    let parentIsFlex = false;
+    if (parent && parent !== state.editorRoot) {
+      const parentDisplay = win.getComputedStyle(parent).display;
+      parentIsFlex = parentDisplay === "flex" || parentDisplay === "inline-flex";
+      const overflowing = parent.scrollWidth > parent.clientWidth + 1;
+      if (parentIsFlex && overflowing) {
+        children.push(
+          ...describeStyleChanges(state, parent, [{ property: "flex-wrap", oldValue: readInlineValue(parent, "flex-wrap"), newValue: "wrap" }])
+        );
+      }
+    }
+    if (!widthChanged) return children;
+    const enabledTiers = config.responsiveBreakpoints || [];
+    if (!enabledTiers.length) return children;
+    const targetSel = describeStableSelector(state, target);
+    if (!targetSel.selector) return children;
+    if (targetSel.descriptor) children.push(targetSel.descriptor);
+    let parentSel = null;
+    if (parentIsFlex) {
+      parentSel = describeStableSelector(state, parent);
+      if (parentSel.descriptor) children.push(parentSel.descriptor);
+    }
+    const pendingInserts = /* @__PURE__ */ new Map();
+    for (const bp of BREAKPOINTS) {
+      if (!enabledTiers.includes(bp.name)) continue;
+      const decl = [
+        { name: "box-sizing", value: "border-box" },
+        { name: "width", value: "100%" },
+        { name: "max-width", value: `${Math.round(widthPx)}px` }
+      ];
+      if (bp.name === "mobile" && usedWestMargin) {
+        decl.push({ name: "margin-left", value: "0" }, { name: "margin-right", value: "0" });
+      }
+      children.push(...describeResponsiveUpsert(state, bp.mediaText, targetSel.selector, decl, pendingInserts));
+      if (parentSel && parentSel.selector) {
+        children.push(
+          ...describeResponsiveUpsert(state, bp.mediaText, parentSel.selector, [{ name: "flex-wrap", value: "wrap" }], pendingInserts)
+        );
+      }
+    }
+    return children;
+  }
+
+  // src/dom/resize-controller.js
+  function cursorFor(dir) {
+    if (dir === "nw" || dir === "se") return "nwse-resize";
+    if (dir === "ne" || dir === "sw") return "nesw-resize";
+    if (dir === "n" || dir === "s") return "ns-resize";
+    return "ew-resize";
+  }
+  function createResizeController(state, overlay, config) {
+    const doc = state.root.ownerDocument;
+    const win = doc.defaultView;
+    const MIN_SIZE = config.resizeMinSize || 24;
+    let drag = null;
+    function onHandleDown(e, dir) {
+      if (!state.isEditModeEnabled || state.selectedElements.length !== 1) return;
+      const target = state.selectedElements[0];
+      e.preventDefault();
+      e.stopPropagation();
+      const computed = win.getComputedStyle(target);
+      const rect = target.getBoundingClientRect();
+      const startMarginLeft = parseFloat(computed.marginLeft) || 0;
+      const startMarginTop = parseFloat(computed.marginTop) || 0;
+      drag = {
+        dir,
+        target,
+        startX: e.clientX,
+        startY: e.clientY,
+        startWidth: rect.width,
+        startHeight: rect.height,
+        startMarginLeft,
+        startMarginTop,
+        lastWidth: rect.width,
+        lastHeight: rect.height,
+        lastMarginLeft: startMarginLeft,
+        lastMarginTop: startMarginTop,
+        // Captured BEFORE any preview mutation — required for correct undo,
+        // since previewStyle below will overwrite el.style as the drag proceeds.
+        oldWidth: readInlineValue(target, "width"),
+        oldHeight: readInlineValue(target, "height"),
+        oldMarginLeft: readInlineValue(target, "margin-left"),
+        oldMarginTop: readInlineValue(target, "margin-top"),
+        oldBoxSizing: readInlineValue(target, "box-sizing"),
+        oldDisplay: readInlineValue(target, "display"),
+        startBoxSizing: computed.boxSizing,
+        startDisplay: computed.display,
+        normalized: false,
+        prevCursor: doc.body.style.cursor,
+        prevUserSelect: doc.body.style.userSelect
+      };
+      doc.body.style.cursor = cursorFor(dir);
+      doc.body.style.userSelect = "none";
+      win.addEventListener("pointermove", onMove);
+      win.addEventListener("pointerup", onUp);
+    }
+    function onMove(e) {
+      if (!drag) return;
+      if (!drag.normalized) {
+        if (drag.startBoxSizing !== "border-box") previewStyle(drag.target, "box-sizing", "border-box");
+        if (drag.startDisplay === "inline") previewStyle(drag.target, "display", "inline-block");
+        drag.normalized = true;
+      }
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+      const { dir } = drag;
+      if (dir.includes("e")) drag.lastWidth = Math.max(MIN_SIZE, drag.startWidth + dx);
+      if (dir.includes("w")) drag.lastWidth = Math.max(MIN_SIZE, drag.startWidth - dx);
+      if (dir.includes("s")) drag.lastHeight = Math.max(MIN_SIZE, drag.startHeight + dy);
+      if (dir.includes("n")) drag.lastHeight = Math.max(MIN_SIZE, drag.startHeight - dy);
+      if (dir.includes("w")) drag.lastMarginLeft = drag.startMarginLeft + drag.startWidth - drag.lastWidth;
+      if (dir.includes("n")) drag.lastMarginTop = drag.startMarginTop + drag.startHeight - drag.lastHeight;
+      if (dir.includes("e") || dir.includes("w")) previewStyle(drag.target, "width", `${drag.lastWidth}px`);
+      if (dir.includes("n") || dir.includes("s")) previewStyle(drag.target, "height", `${drag.lastHeight}px`);
+      if (dir.includes("w")) previewStyle(drag.target, "margin-left", `${drag.lastMarginLeft}px`);
+      if (dir.includes("n")) previewStyle(drag.target, "margin-top", `${drag.lastMarginTop}px`);
+      overlay.showSelectedMany(state.selectedElements);
+    }
+    function onUp() {
+      win.removeEventListener("pointermove", onMove);
+      win.removeEventListener("pointerup", onUp);
+      doc.body.style.cursor = drag.prevCursor;
+      doc.body.style.userSelect = drag.prevUserSelect;
+      if (!drag.normalized) {
+        drag = null;
+        return;
+      }
+      const { dir, target } = drag;
+      const entries = [];
+      const widthChanged = dir.includes("e") || dir.includes("w");
+      const heightChanged = dir.includes("n") || dir.includes("s");
+      if (widthChanged) entries.push({ property: "width", oldValue: drag.oldWidth, newValue: `${drag.lastWidth}px` });
+      if (heightChanged) entries.push({ property: "height", oldValue: drag.oldHeight, newValue: `${drag.lastHeight}px` });
+      if (dir.includes("w")) entries.push({ property: "margin-left", oldValue: drag.oldMarginLeft, newValue: `${drag.lastMarginLeft}px` });
+      if (dir.includes("n")) entries.push({ property: "margin-top", oldValue: drag.oldMarginTop, newValue: `${drag.lastMarginTop}px` });
+      if (drag.startBoxSizing !== "border-box") entries.push({ property: "box-sizing", oldValue: drag.oldBoxSizing, newValue: "border-box" });
+      if (drag.startDisplay === "inline") entries.push({ property: "display", oldValue: drag.oldDisplay, newValue: "inline-block" });
+      const children = describeStyleChanges(state, target, entries);
+      if (config.autoResponsiveCss !== false) {
+        children.push(
+          ...describeResponsiveInjection(
+            state,
+            target,
+            { widthChanged, widthPx: drag.lastWidth, usedWestMargin: dir.includes("w") },
+            config
+          )
+        );
+      }
+      if (children.length) addChange(state, { type: "batch", label: "resize", children });
+      overlay.showSelectedMany(state.selectedElements);
+      drag = null;
+    }
+    const listeners = overlay.handles.map(({ el, dir }) => {
+      const handler = (e) => onHandleDown(e, dir);
+      el.addEventListener("pointerdown", handler);
+      return { el, handler };
+    });
+    return {
+      destroy() {
+        listeners.forEach(({ el, handler }) => el.removeEventListener("pointerdown", handler));
+        win.removeEventListener("pointermove", onMove);
+        win.removeEventListener("pointerup", onUp);
+      }
+    };
   }
 
   // src/dom/text-editor.js
@@ -635,95 +1365,6 @@ var VisualEditor = (() => {
     };
   }
 
-  // src/dom/style-mutator.js
-  function applyStyle(el, property, value) {
-    if (value === null || value === "") {
-      el.style.removeProperty(property);
-    } else {
-      el.style.setProperty(property, value);
-    }
-  }
-  registerHandler("set-style", {
-    forward(state, entry) {
-      const el = fromPath(entry.elementPath, state.root);
-      if (el) applyStyle(el, entry.property, entry.newValue);
-    },
-    inverse(state, entry) {
-      const el = fromPath(entry.elementPath, state.root);
-      if (el) applyStyle(el, entry.property, entry.oldValue);
-    }
-  });
-  function readInlineValue(el, property) {
-    const v = el.style.getPropertyValue(property);
-    return v === "" ? null : v;
-  }
-  function previewStyle(el, property, value) {
-    applyStyle(el, property, value);
-  }
-  function commitStyle(state, el, property, oldValue, newValue) {
-    const normOld = oldValue === "" ? null : oldValue;
-    const normNew = newValue === "" ? null : newValue;
-    if (normOld === normNew) return;
-    const path = toPath(el, state.root);
-    if (!path) return;
-    addChange(state, { type: "set-style", elementPath: path, property, oldValue: normOld, newValue: normNew });
-  }
-  function applyStyleBatch(state, el, declarations, label = "style") {
-    const path = toPath(el, state.root);
-    if (!path) return;
-    const children = [];
-    for (const { property, value } of declarations) {
-      const cur = el.style.getPropertyValue(property);
-      const oldValue = cur === "" ? null : cur;
-      const newValue = value === "" || value == null ? null : value;
-      if (oldValue === newValue) continue;
-      children.push({ type: "set-style", elementPath: path, property, oldValue, newValue });
-    }
-    if (!children.length) return;
-    addChange(state, { type: "batch", label, children });
-  }
-  function removeInlineStyle(state, el, property) {
-    commitStyle(state, el, property, readInlineValue(el, property), null);
-  }
-  function applyStyleToMany(state, elements, property, value, label = "style") {
-    const children = [];
-    for (const el of elements) {
-      const path = toPath(el, state.root);
-      if (!path) continue;
-      const cur = el.style.getPropertyValue(property);
-      const oldValue = cur === "" ? null : cur;
-      const newValue = value === "" || value == null ? null : value;
-      if (oldValue === newValue) continue;
-      children.push({ type: "set-style", elementPath: path, property, oldValue, newValue });
-    }
-    if (!children.length) return;
-    addChange(state, { type: "batch", label, children });
-  }
-  function applyStyleBatchToMany(state, elements, declarations, label = "style") {
-    const children = [];
-    for (const el of elements) {
-      const path = toPath(el, state.root);
-      if (!path) continue;
-      for (const { property, value } of declarations) {
-        const cur = el.style.getPropertyValue(property);
-        const oldValue = cur === "" ? null : cur;
-        const newValue = value === "" || value == null ? null : value;
-        if (oldValue === newValue) continue;
-        children.push({ type: "set-style", elementPath: path, property, oldValue, newValue });
-      }
-    }
-    if (!children.length) return;
-    addChange(state, { type: "batch", label, children });
-  }
-  function listInlineStyles(el) {
-    const out = [];
-    for (let i = 0; i < el.style.length; i++) {
-      const name = el.style[i];
-      out.push({ name, value: el.style.getPropertyValue(name), priority: el.style.getPropertyPriority(name) });
-    }
-    return out;
-  }
-
   // src/ui/google-fonts.js
   var loaded = /* @__PURE__ */ new Set();
   function ensureGoogleFont(doc, family) {
@@ -903,255 +1544,6 @@ var VisualEditor = (() => {
     win.addEventListener("scroll", reposition, true);
     win.addEventListener("resize", reposition);
     return { el: panel, show, hide, isOpen };
-  }
-
-  // src/css/specificity.js
-  function splitSelectorList(selectorText) {
-    const parts = [];
-    let depth = 0;
-    let current = "";
-    for (const ch of selectorText) {
-      if (ch === "(" || ch === "[") depth++;
-      else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
-      if (ch === "," && depth === 0) {
-        parts.push(current.trim());
-        current = "";
-      } else {
-        current += ch;
-      }
-    }
-    if (current.trim()) parts.push(current.trim());
-    return parts;
-  }
-  function computeSpecificity(selector) {
-    let a = 0;
-    let b = 0;
-    let c = 0;
-    let s = selector;
-    s = s.replace(/:where\([^)]*\)/gi, " ");
-    const funcRe = /:(is|not|has|matches)\(([^()]*)\)/gi;
-    let m;
-    while ((m = funcRe.exec(s)) !== null) {
-      const branches = splitSelectorList(m[2]);
-      let best = { a: 0, b: 0, c: 0 };
-      for (const branch of branches) {
-        const spec = computeSpecificity(branch);
-        if (compareSpecificity(spec, best) > 0) best = spec;
-      }
-      a += best.a;
-      b += best.b;
-      c += best.c;
-    }
-    s = s.replace(funcRe, " ");
-    const ids = s.match(/#[\w-]+/g);
-    if (ids) a += ids.length;
-    s = s.replace(/#[\w-]+/g, " ");
-    const classes = s.match(/\.[\w-]+/g);
-    if (classes) b += classes.length;
-    s = s.replace(/\.[\w-]+/g, " ");
-    const attrs = s.match(/\[[^\]]+\]/g);
-    if (attrs) b += attrs.length;
-    s = s.replace(/\[[^\]]+\]/g, " ");
-    const pseudoEls = s.match(/::[\w-]+/g);
-    if (pseudoEls) c += pseudoEls.length;
-    s = s.replace(/::[\w-]+/g, " ");
-    const pseudoClasses = s.match(/:[\w-]+/g);
-    if (pseudoClasses) b += pseudoClasses.length;
-    s = s.replace(/:[\w-]+/g, " ");
-    const types = s.match(/[a-zA-Z][\w-]*/g);
-    if (types) c += types.length;
-    return { a, b, c };
-  }
-  function compareSpecificity(x, y) {
-    if (x.a !== y.a) return x.a - y.a;
-    if (x.b !== y.b) return x.b - y.b;
-    return x.c - y.c;
-  }
-  function formatSpecificity(spec) {
-    return `${spec.a},${spec.b},${spec.c}`;
-  }
-
-  // src/css/rule-matcher.js
-  function readProperties(style) {
-    const props = [];
-    for (let i = 0; i < style.length; i++) {
-      const name = style[i];
-      props.push({
-        name,
-        value: style.getPropertyValue(name),
-        priority: style.getPropertyPriority(name)
-      });
-    }
-    return props;
-  }
-  function bestMatchSpecificity(el, selectorText) {
-    let best = null;
-    for (const branch of splitSelectorList(selectorText)) {
-      let matches = false;
-      try {
-        matches = el.matches(branch);
-      } catch {
-        matches = false;
-      }
-      if (matches) {
-        const spec = computeSpecificity(branch);
-        if (!best || compareSpecificity(spec, best) > 0) best = spec;
-      }
-    }
-    return best;
-  }
-  function isGroupingRule(rule) {
-    return !!rule.cssRules && (!!rule.media || rule.conditionText != null);
-  }
-  function walkRuleList(rules, el, sheetIndex, mediaPath, conditionText, out) {
-    for (let i = 0; i < rules.length; i++) {
-      const rule = rules[i];
-      if (isGroupingRule(rule)) {
-        const cond = rule.media ? `@media ${rule.media.mediaText}` : `@supports ${rule.conditionText}`;
-        walkRuleList(rule.cssRules, el, sheetIndex, mediaPath.concat(i), cond, out);
-        continue;
-      }
-      if (rule.selectorText != null && rule.style) {
-        const spec = bestMatchSpecificity(el, rule.selectorText);
-        if (spec) {
-          out.push({
-            sheetIndex,
-            mediaPath,
-            ruleIndex: i,
-            selectorText: rule.selectorText,
-            specificity: spec,
-            conditionText,
-            properties: readProperties(rule.style),
-            rule
-          });
-        }
-      }
-    }
-  }
-  function getMatchingRules(doc, el) {
-    const matched = [];
-    const inaccessible = [];
-    const sheets = doc.styleSheets;
-    for (let s = 0; s < sheets.length; s++) {
-      const sheet = sheets[s];
-      let rules;
-      try {
-        rules = sheet.cssRules;
-      } catch {
-        inaccessible.push({ sheetIndex: s, href: sheet.href || "(inline)" });
-        continue;
-      }
-      if (!rules) continue;
-      walkRuleList(rules, el, s, [], null, matched);
-    }
-    matched.sort((a, b) => compareSpecificity(b.specificity, a.specificity));
-    return { matched, inaccessible };
-  }
-  function resolveRule(doc, sheetIndex, mediaPath, ruleIndex) {
-    const sheet = doc.styleSheets[sheetIndex];
-    if (!sheet) return null;
-    let rules;
-    try {
-      rules = sheet.cssRules;
-    } catch {
-      return null;
-    }
-    for (const idx of mediaPath) {
-      const grouping = rules[idx];
-      if (!grouping || !grouping.cssRules) return null;
-      rules = grouping.cssRules;
-    }
-    return rules[ruleIndex] || null;
-  }
-
-  // src/css/stylesheet-registry.js
-  function getOrCreateEditableStylesheet(state) {
-    const existing = state.editableStylesheet;
-    if (existing && existing.ownerNode && existing.ownerNode.isConnected) return existing;
-    const doc = state.root.ownerDocument;
-    let styleEl = doc.querySelector(`style[${ATTR_CREATED_SHEET}]`);
-    if (!styleEl) {
-      styleEl = doc.createElement("style");
-      styleEl.setAttribute(ATTR_CREATED_SHEET, "");
-      doc.head.appendChild(styleEl);
-    }
-    state.editableStylesheet = styleEl.sheet;
-    return state.editableStylesheet;
-  }
-  function indexOfSheet(doc, sheet) {
-    for (let i = 0; i < doc.styleSheets.length; i++) {
-      if (doc.styleSheets[i] === sheet) return i;
-    }
-    return -1;
-  }
-
-  // src/css/css-mutator.js
-  function setOrRemove(style, property, value, priority) {
-    if (value === null || value === "") {
-      style.removeProperty(property);
-    } else {
-      style.setProperty(property, value, priority || "");
-    }
-  }
-  registerHandler("edit-css-rule", {
-    forward(state, entry) {
-      const rule = resolveRule(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath, entry.ruleIndex);
-      if (rule) setOrRemove(rule.style, entry.property, entry.newValue, entry.newPriority);
-    },
-    inverse(state, entry) {
-      const rule = resolveRule(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath, entry.ruleIndex);
-      if (rule) setOrRemove(rule.style, entry.property, entry.oldValue, entry.oldPriority);
-    }
-  });
-  registerHandler("add-css-rule", {
-    forward(state, entry) {
-      const rule = resolveRule(state.root.ownerDocument, entry.sheetIndex, entry.mediaPath, entry.ruleIndex);
-      if (rule && rule.selectorText === entry.selectorText) return;
-      const sheet = state.root.ownerDocument.styleSheets[entry.sheetIndex];
-      if (!sheet) return;
-      const body = entry.properties.map((p) => `${p.name}: ${p.value}${p.priority ? " !" + p.priority : ""};`).join(" ");
-      sheet.insertRule(`${entry.selectorText} { ${body} }`, entry.ruleIndex);
-    },
-    inverse(state, entry) {
-      const sheet = state.root.ownerDocument.styleSheets[entry.sheetIndex];
-      if (sheet) sheet.deleteRule(entry.ruleIndex);
-    }
-  });
-  function commitCssEdit(state, address, property, newValue, newPriority = "") {
-    const rule = resolveRule(state.root.ownerDocument, address.sheetIndex, address.mediaPath, address.ruleIndex);
-    if (!rule) return;
-    const oldRaw = rule.style.getPropertyValue(property);
-    const oldValue = oldRaw === "" ? null : oldRaw;
-    const oldPriority = rule.style.getPropertyPriority(property);
-    const normNew = newValue === "" ? null : newValue;
-    if (oldValue === normNew && oldPriority === newPriority) return;
-    addChange(state, {
-      type: "edit-css-rule",
-      sheetIndex: address.sheetIndex,
-      mediaPath: address.mediaPath,
-      ruleIndex: address.ruleIndex,
-      property,
-      oldValue,
-      oldPriority,
-      newValue: normNew,
-      newPriority
-    });
-  }
-  function addCssRule(state, selectorText) {
-    const doc = state.root.ownerDocument;
-    const sheet = getOrCreateEditableStylesheet(state);
-    const sheetIndex = indexOfSheet(doc, sheet);
-    if (sheetIndex === -1) return null;
-    const ruleIndex = sheet.cssRules.length;
-    addChange(state, {
-      type: "add-css-rule",
-      sheetIndex,
-      mediaPath: [],
-      ruleIndex,
-      selectorText,
-      properties: []
-    });
-    return { sheetIndex, mediaPath: [], ruleIndex };
   }
 
   // src/core/debounce.js
@@ -2307,6 +2699,16 @@ var VisualEditor = (() => {
   var CONTENT_MARKER_ATTRS = [ATTR_EDITING, ATTR_CREATED_SHEET, "contenteditable"];
   function getCleanHTML(doc) {
     const clone = doc.documentElement.cloneNode(true);
+    const liveCreatedSheets = doc.querySelectorAll(`style[${ATTR_CREATED_SHEET}]`);
+    const clonedCreatedSheets = clone.querySelectorAll(`style[${ATTR_CREATED_SHEET}]`);
+    clonedCreatedSheets.forEach((cloneStyle, i) => {
+      const liveSheet = liveCreatedSheets[i] && liveCreatedSheets[i].sheet;
+      if (!liveSheet) return;
+      try {
+        cloneStyle.textContent = Array.from(liveSheet.cssRules).map((r) => r.cssText).join("\n");
+      } catch {
+      }
+    });
     clone.querySelectorAll(`[${ATTR_IGNORE}]`).forEach((el) => el.remove());
     for (const attr of CONTENT_MARKER_ATTRS) {
       clone.querySelectorAll(`[${attr}]`).forEach((el) => el.removeAttribute(attr));
@@ -2370,6 +2772,7 @@ ${clone.outerHTML}`;
     const config = createConfig(options);
     const state = createEditorState({ root, editorRoot, config });
     const modeController = createModeController(state);
+    const resizeController = config.enableResize !== false ? createResizeController(state, modeController.overlay, config) : null;
     const toast = createToastHost(editorRoot);
     const confirmBeforeSave = config.confirmBeforeSave !== void 0 ? config.confirmBeforeSave : !config.onSave;
     const doSave = () => saveNow(state, toast, { confirmOverwrite: confirmBeforeSave });
@@ -2425,6 +2828,7 @@ ${clone.outerHTML}`;
     instance = {
       state,
       modeController,
+      resizeController,
       mainToolbar,
       toolbar,
       stylePanel,
@@ -2440,6 +2844,7 @@ ${clone.outerHTML}`;
       getState: () => state,
       destroy() {
         modeController.disable();
+        if (resizeController) resizeController.destroy();
         editorRoot.remove();
         instance = null;
       }

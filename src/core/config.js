@@ -34,6 +34,13 @@ export function createConfig(overrides = {}) {
     confirmBeforeSave: undefined,
     startInEditMode: false,
     debounceMs: DEFAULT_DEBOUNCE_MS,
+    // Resize handles on the selection outline, and whether resizing an
+    // element auto-injects reflow fixes + @media breakpoint rules so layout
+    // holds up across viewport sizes without hand-written responsive CSS.
+    enableResize: true,
+    autoResponsiveCss: true,
+    resizeMinSize: 24,
+    responsiveBreakpoints: ['tablet', 'mobile'],
     fontFamilies: [...WEB_SAFE_FONTS],
     googleFonts: [...GOOGLE_FONTS],
     containerTags: CONTAINER_TAGS,

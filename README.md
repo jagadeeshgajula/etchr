@@ -14,6 +14,8 @@ No build step is required to *use* it — just the bundled `dist/editor.js` and 
 ## Features
 
 - **Select anything** — hover outline + click-to-select any element on the page.
+- **Drag-to-resize with 8 handles** — the moment you select an element, eight resize handles (four corners + four edge midpoints) appear on its border. Drag any handle to freely resize the element; west/north handles keep the opposite edge visually anchored using margin compensation, so elements in normal document flow resize as you'd expect. Neighboring elements reflow live as you drag, and the whole gesture is a single undo step.
+- **Auto-responsive CSS (background)** — resizing an element auto-authors the responsive CSS you'd otherwise write by hand: a `max-width: 100%` safety guard, `flex-wrap: wrap` on a flex parent when a child would overflow, and real `@media` breakpoint rules (tablet ≤768px, mobile ≤480px by default) that cap the element at its new size so the layout holds up on smaller screens. Repeated resizes update the same rules in place instead of piling up duplicates. Fully undoable and emitted into the saved HTML.
 - **Inline text editing** — edit text content directly, plain-text-safe (no pasted markup leaks in).
 - **Font & style panel** — change font family, size, color, weight, alignment, spacing, etc. live.
 - **Describe-a-style box (plain English)** — type things like *"add a thick dashed black border on the right"* and Etchr turns it into CSS. No CSS knowledge required. Optionally route this to your own LLM endpoint via `onAiStyle` for smarter understanding.
@@ -152,6 +154,10 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 | `startInEditMode` | `boolean` | `false` | Enter edit mode immediately on init. |
 | `debounceMs` | `number` | `150` | Debounce for CSS rescans on selection change. |
 | `fontFamilies` / `googleFonts` | `string[]` | built-in lists | Customize the font pickers. |
+| `enableResize` | `boolean` | `true` | Show the 8 drag-to-resize handles on the selected element. Set `false` to disable resizing entirely. |
+| `autoResponsiveCss` | `boolean` | `true` | Whether resizing auto-injects reflow fixes + `@media` breakpoint rules. Set `false` to record only the raw width/height change. |
+| `resizeMinSize` | `number` | `24` | Minimum width/height (px) a drag can shrink an element to. |
+| `responsiveBreakpoints` | `string[]` | `['tablet', 'mobile']` | Which breakpoint tiers to generate on resize. `tablet` = `(max-width: 768px)`, `mobile` = `(max-width: 480px)`. Pass `[]` to keep the same-viewport reflow fixes but skip `@media` generation. |
 
 ---
 
@@ -164,24 +170,29 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 | `Ctrl+Y` / `Ctrl+Shift+Z` | Redo |
 | `Ctrl+S` | Save |
 | `Shift+Click` | Add/remove element from multi-selection |
+| `Drag a resize handle` | Resize the selected element (corner = both axes, edge = one axis); auto-generates responsive CSS |
 | `Escape` | Close the open panel / palette, or clear selection |
 
 ---
 
 ## How it works (architecture notes)
 
-- **Single source of truth for mutations.** Every undoable change (`text-edit`, `set-style`, `add-element`, `remove-element`, `edit-css-rule`, `add-css-rule`, `set-attribute`, `batch`) is described as data and applied through one `addChange()` / `undo()` / `redo()` engine (`src/core/history.js`). UI modules never mutate the DOM directly — they compute old/new values and dispatch a change. This keeps undo/redo provably consistent.
+- **Single source of truth for mutations.** Every undoable change (`text-edit`, `set-style`, `add-element`, `remove-element`, `edit-css-rule`, `add-css-rule`, `add-media-rule`, `insert-css-rule`, `set-attribute`, `batch`) is described as data and applied through one `addChange()` / `undo()` / `redo()` engine (`src/core/history.js`). UI modules never mutate the DOM directly — they compute old/new values and dispatch a change. This keeps undo/redo provably consistent.
+- **Composed batches for resize.** A single resize gesture emits one `batch` bundling the width/height/margin changes, the reflow fix, the stable-class assignment, and every `@media` rule — so the whole gesture (visual resize *and* the responsive CSS authored in the background) undoes and redoes atomically.
+- **CSSOM rules are materialized on save.** Rules added via `insertRule()` live only on the live stylesheet object, so the serializer writes each editor-created sheet's current `cssRules` back into its `<style>` element before emitting the clean HTML — otherwise CSS-editor and auto-responsive rules would serialize as an empty `<style>`.
 - **Positional element paths.** Elements are addressed by an array of child-element indices from the root (`src/core/element-path.js`), skipping editor-owned nodes and text-node whitespace, so paths stay valid across a linear history.
 - **All UI is contained.** Every injected element lives under `#vve-root` (marked `data-vve-ignore`) and uses a `vve-` class prefix, so save-time stripping is a single subtree removal plus attribute cleanup.
 - **Clean serialization.** `src/serialize/html-serializer.js` clones the document, removes the editor subtree, strips bookkeeping attributes/classes, and returns exactly your content.
 
 ---
 
-## Limitations (v1)
+## Limitations
 
 - Path stability assumes all DOM mutation goes through Etchr's history engine; a host page's own scripts mutating the editable region during edit mode is out of scope.
 - Inline text editing commits plain text only.
 - Shadow DOM content and true cross-origin iframes are out of scope (the script can't be injected into a document it doesn't control). Same-origin iframes are fully supported.
+- Auto-responsive breakpoints use a conservative `width: 100%` + `max-width: <resized>px` cap rather than simulating a narrower viewport (which isn't possible against the live host document), so they only ever shrink an element relative to its authored desktop size. Fine-tune the generated rules in the CSS panel if you need different behavior at a breakpoint.
+- Resize handles target a single selected element; multi-select resizing is out of scope.
 
 ---
 

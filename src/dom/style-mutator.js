@@ -47,6 +47,27 @@ export function commitStyle(state, el, property, oldValue, newValue) {
 }
 
 /**
+ * Builds `set-style` change descriptors from explicitly supplied {property,
+ * oldValue, newValue} entries, WITHOUT calling addChange. Unlike applyStyleBatch
+ * (which reads oldValue fresh from the live element), this is required after a
+ * live-preview drag has already mutated el.style — by the time you'd commit,
+ * el.style holds the final value, so reading "current" would produce a false
+ * no-op. Callers merge the returned descriptors into their own {type:'batch'}.
+ */
+export function describeStyleChanges(state, el, entries) {
+  const path = toPath(el, state.root);
+  if (!path) return [];
+  const children = [];
+  for (const { property, oldValue, newValue } of entries) {
+    const normOld = oldValue === '' ? null : oldValue;
+    const normNew = newValue === '' || newValue == null ? null : newValue;
+    if (normOld === normNew) continue;
+    children.push({ type: 'set-style', elementPath: path, property, oldValue: normOld, newValue: normNew });
+  }
+  return children;
+}
+
+/**
  * Applies a set of {property, value} declarations to `el` as ONE undoable unit.
  * Reads each current inline value as its oldValue. Skips no-op declarations.
  */

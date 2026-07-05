@@ -72,6 +72,13 @@ var VisualEditor = (() => {
       autoResponsiveCss: true,
       resizeMinSize: 24,
       responsiveBreakpoints: ["tablet", "mobile"],
+      // Drag a selected element to move it anywhere on the page (promotes it to
+      // an absolutely-positioned, page-coordinate overlay — PowerPoint-canvas
+      // style). Set false to keep elements pinned in normal document flow.
+      enableMove: true,
+      // Right-click layering menu (Bring to Front / Send to Back / Bring Forward /
+      // Send Backward) that reorders overlapping elements via z-index.
+      enableLayering: true,
       fontFamilies: [...WEB_SAFE_FONTS],
       googleFonts: [...GOOGLE_FONTS],
       containerTags: CONTAINER_TAGS,
@@ -109,13 +116,18 @@ var VisualEditor = (() => {
   // src/dom/selection-overlay.js
   var HANDLE_DIRS = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
   var HANDLE_SIZE = 8;
-  function createSelectionOverlay(editorRoot) {
+  function createSelectionOverlay(editorRoot, { enableMove = true } = {}) {
     const doc = editorRoot.ownerDocument;
     const hover = doc.createElement("div");
     hover.className = cls("outline-hover");
     hover.setAttribute(ATTR_IGNORE, "");
     hover.style.display = "none";
     editorRoot.appendChild(hover);
+    const moveSurface = doc.createElement("div");
+    moveSurface.className = cls("move-surface");
+    moveSurface.setAttribute(ATTR_IGNORE, "");
+    moveSurface.style.display = "none";
+    editorRoot.appendChild(moveSurface);
     const selectedPool = [];
     function ensurePoolSize(count) {
       while (selectedPool.length < count) {
@@ -163,6 +175,20 @@ var VisualEditor = (() => {
     function hideHandles() {
       handles.forEach(({ el }) => el.style.display = "none");
     }
+    function positionMoveSurface(targetEl) {
+      const root = editorRoot.ownerDocument.body;
+      const unmovable = targetEl && (targetEl === root || targetEl.contains && targetEl.contains(root) || !targetEl.parentElement);
+      if (!enableMove || !targetEl || !targetEl.isConnected || unmovable) {
+        moveSurface.style.display = "none";
+        return;
+      }
+      const r = targetEl.getBoundingClientRect();
+      moveSurface.style.display = "block";
+      moveSurface.style.top = `${r.top}px`;
+      moveSurface.style.left = `${r.left}px`;
+      moveSurface.style.width = `${r.width}px`;
+      moveSurface.style.height = `${r.height}px`;
+    }
     function positionOverlay(overlayEl, targetEl) {
       if (!targetEl || !targetEl.isConnected) {
         overlayEl.style.display = "none";
@@ -181,12 +207,18 @@ var VisualEditor = (() => {
         if (i < elements.length) positionOverlay(div, elements[i]);
         else div.style.display = "none";
       });
-      if (elements.length === 1 && elements[0].isConnected) positionHandles(elements[0]);
-      else hideHandles();
+      if (elements.length === 1 && elements[0].isConnected) {
+        positionHandles(elements[0]);
+        positionMoveSurface(elements[0]);
+      } else {
+        hideHandles();
+        moveSurface.style.display = "none";
+      }
     }
     function hideSelected() {
       selectedPool.forEach((div) => div.style.display = "none");
       hideHandles();
+      moveSurface.style.display = "none";
     }
     return {
       showHover(el) {
@@ -198,6 +230,7 @@ var VisualEditor = (() => {
       showSelectedMany,
       hideSelected,
       handles,
+      moveSurface,
       reposition(hoveredEl, selectedElements) {
         positionOverlay(hover, hoveredEl);
         showSelectedMany(selectedElements || []);
@@ -206,6 +239,7 @@ var VisualEditor = (() => {
         hover.remove();
         selectedPool.forEach((d2) => d2.remove());
         handles.forEach(({ el }) => el.remove());
+        moveSurface.remove();
       }
     };
   }
@@ -217,7 +251,7 @@ var VisualEditor = (() => {
   function createModeController(state) {
     const doc = state.root.ownerDocument;
     const win = doc.defaultView;
-    const overlay = createSelectionOverlay(state.editorRoot);
+    const overlay = createSelectionOverlay(state.editorRoot, { enableMove: state.config.enableMove !== false });
     let attached = false;
     function onMouseOver(e) {
       const target = e.target;
@@ -1077,6 +1111,172 @@ var VisualEditor = (() => {
     };
   }
 
+  // src/dom/move-controller.js
+  var DRAG_THRESHOLD = 3;
+  var MOVE_PROPS = ["position", "left", "top", "width", "height", "margin-top", "margin-right", "margin-bottom", "margin-left", "box-sizing"];
+  function isEditorOwned2(el) {
+    return !!(el && el.closest(`[${ATTR_IGNORE}]`));
+  }
+  function createMoveController(state, modeController, config) {
+    const doc = state.root.ownerDocument;
+    const win = doc.defaultView;
+    const root = state.root;
+    const overlay = modeController.overlay;
+    const surface = overlay.moveSurface;
+    let drag = null;
+    function onDown(e) {
+      if (e.button !== 0) return;
+      if (!state.isEditModeEnabled || state.selectedElements.length !== 1) return;
+      const target = state.selectedElements[0];
+      if (!target.isConnected || !target.parentElement || target === root || target.contains(root)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const rect = target.getBoundingClientRect();
+      drag = {
+        target,
+        startX: e.clientX,
+        startY: e.clientY,
+        // Viewport-space top-left of the element at gesture start — the visual
+        // position we must preserve exactly through promotion + reparenting.
+        viewLeft: rect.left,
+        viewTop: rect.top,
+        frozenWidth: rect.width,
+        frozenHeight: rect.height,
+        // Exact original DOM slot, for a precise revert before the clean commit.
+        origParent: target.parentElement,
+        origNextSibling: target.nextSibling,
+        // Old inline values, captured BEFORE any preview mutation (mirrors resize).
+        oldInline: Object.fromEntries(MOVE_PROPS.map((p) => [p, readInlineValue(target, p)])),
+        // Placed offset (added to viewLeft/Top each frame) — resolved in promote()
+        // so the element lands pixel-exact regardless of its containing block.
+        baseLeft: 0,
+        baseTop: 0,
+        lastLeft: 0,
+        lastTop: 0,
+        moved: false,
+        promoted: false,
+        prevCursor: doc.body.style.cursor,
+        prevUserSelect: doc.body.style.userSelect,
+        shiftKey: e.shiftKey
+      };
+      try {
+        surface.setPointerCapture(e.pointerId);
+      } catch {
+      }
+      win.addEventListener("pointermove", onMove);
+      win.addEventListener("pointerup", onUp);
+    }
+    function promote() {
+      const t = drag.target;
+      previewStyle(t, "box-sizing", "border-box");
+      previewStyle(t, "width", `${drag.frozenWidth}px`);
+      previewStyle(t, "height", `${drag.frozenHeight}px`);
+      previewStyle(t, "margin-top", "0px");
+      previewStyle(t, "margin-right", "0px");
+      previewStyle(t, "margin-bottom", "0px");
+      previewStyle(t, "margin-left", "0px");
+      previewStyle(t, "position", "absolute");
+      if (drag.origParent !== root) root.appendChild(t);
+      previewStyle(t, "left", "0px");
+      previewStyle(t, "top", "0px");
+      const at0 = t.getBoundingClientRect();
+      drag.baseLeft = drag.viewLeft - at0.left;
+      drag.baseTop = drag.viewTop - at0.top;
+      previewStyle(t, "left", `${drag.baseLeft}px`);
+      previewStyle(t, "top", `${drag.baseTop}px`);
+      drag.promoted = true;
+    }
+    function onMove(e) {
+      if (!drag) return;
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+      if (!drag.moved && Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+      if (!drag.moved) {
+        drag.moved = true;
+        promote();
+        doc.body.style.cursor = "move";
+        doc.body.style.userSelect = "none";
+      }
+      drag.lastLeft = drag.baseLeft + dx;
+      drag.lastTop = drag.baseTop + dy;
+      previewStyle(drag.target, "left", `${drag.lastLeft}px`);
+      previewStyle(drag.target, "top", `${drag.lastTop}px`);
+      overlay.showSelectedMany(state.selectedElements);
+    }
+    function onUp(e) {
+      win.removeEventListener("pointermove", onMove);
+      win.removeEventListener("pointerup", onUp);
+      try {
+        surface.releasePointerCapture(e.pointerId);
+      } catch {
+      }
+      const active = drag;
+      drag = null;
+      if (!active.moved) {
+        forwardClick(active, e);
+        return;
+      }
+      doc.body.style.cursor = active.prevCursor;
+      doc.body.style.userSelect = active.prevUserSelect;
+      const { target } = active;
+      for (const p of MOVE_PROPS) {
+        const v = active.oldInline[p];
+        if (v == null) target.style.removeProperty(p);
+        else target.style.setProperty(p, v);
+      }
+      if (active.origParent !== root) active.origParent.insertBefore(target, active.origNextSibling);
+      const oldPath = toPath(target, root);
+      const children = [];
+      let newPath = oldPath;
+      if (active.origParent !== root) {
+        const oldParentPath = oldPath.slice(0, -1);
+        const oldIndex = oldPath[oldPath.length - 1];
+        const toIndex = getEditableChildren(root).length;
+        children.push({ type: "move-element", fromParentPath: oldParentPath, fromIndex: oldIndex, toParentPath: [], toIndex });
+        newPath = [toIndex];
+      }
+      const entries = [
+        { property: "box-sizing", oldValue: active.oldInline["box-sizing"], newValue: "border-box" },
+        { property: "width", oldValue: active.oldInline["width"], newValue: `${active.frozenWidth}px` },
+        { property: "height", oldValue: active.oldInline["height"], newValue: `${active.frozenHeight}px` },
+        // Zero each margin longhand individually — mirrors promote()'s `margin:0`
+        // while restoring cleanly to whatever longhands a prior resize had set.
+        { property: "margin-top", oldValue: active.oldInline["margin-top"], newValue: "0px" },
+        { property: "margin-right", oldValue: active.oldInline["margin-right"], newValue: "0px" },
+        { property: "margin-bottom", oldValue: active.oldInline["margin-bottom"], newValue: "0px" },
+        { property: "margin-left", oldValue: active.oldInline["margin-left"], newValue: "0px" },
+        { property: "position", oldValue: active.oldInline["position"], newValue: "absolute" },
+        { property: "left", oldValue: active.oldInline["left"], newValue: `${active.lastLeft}px` },
+        { property: "top", oldValue: active.oldInline["top"], newValue: `${active.lastTop}px` }
+      ];
+      for (const { property, oldValue, newValue } of entries) {
+        const normOld = oldValue === "" ? null : oldValue;
+        const normNew = newValue === "" || newValue == null ? null : newValue;
+        if (normOld === normNew) continue;
+        children.push({ type: "set-style", elementPath: newPath, property, oldValue: normOld, newValue: normNew });
+      }
+      if (children.length) addChange(state, { type: "batch", label: "move", children });
+      overlay.showSelectedMany(state.selectedElements);
+    }
+    function forwardClick(active, e) {
+      surface.style.display = "none";
+      const under = doc.elementFromPoint(e.clientX, e.clientY);
+      surface.style.display = "block";
+      if (!under || isEditorOwned2(under)) return;
+      if (active.shiftKey) modeController.toggleSelectElement(state, under);
+      else modeController.selectElement(state, under);
+    }
+    const downHandler = (e) => onDown(e);
+    surface.addEventListener("pointerdown", downHandler);
+    return {
+      destroy() {
+        surface.removeEventListener("pointerdown", downHandler);
+        win.removeEventListener("pointermove", onMove);
+        win.removeEventListener("pointerup", onUp);
+      }
+    };
+  }
+
   // src/dom/text-editor.js
   registerHandler("text-edit", {
     forward(state, entry) {
@@ -1201,6 +1401,153 @@ var VisualEditor = (() => {
     panelEl.style.left = `${left}px`;
   }
 
+  // src/dom/layer-mutator.js
+  function effectiveZ(el, win) {
+    const n = parseInt(win.getComputedStyle(el).zIndex, 10);
+    return Number.isNaN(n) ? 0 : n;
+  }
+  function inlineValue(el, property) {
+    const v = el.style.getPropertyValue(property);
+    return v === "" ? null : v;
+  }
+  function applyLayer(state, el, direction) {
+    const root = state.root;
+    const win = root.ownerDocument.defaultView;
+    const parent = el.parentElement;
+    if (!parent) return;
+    const group = getEditableChildren(parent);
+    const domIndex = new Map(group.map((n, i) => [n, i]));
+    const others = group.filter((n) => n !== el);
+    const myZ = effectiveZ(el, win);
+    const children = [];
+    const setStyle = (target, property, value) => {
+      const path = toPath(target, root);
+      if (!path) return;
+      const oldValue = inlineValue(target, property);
+      const newValue = value == null ? null : String(value);
+      if ((oldValue == null ? null : oldValue) === newValue) return;
+      children.push({ type: "set-style", elementPath: path, property, oldValue, newValue });
+    };
+    if (win.getComputedStyle(el).position === "static") {
+      setStyle(el, "position", "relative");
+    }
+    if (direction === "front") {
+      const max = others.length ? Math.max(...others.map((n) => effectiveZ(n, win))) : 0;
+      if (myZ <= max) setStyle(el, "z-index", max + 1);
+    } else if (direction === "back") {
+      const min = others.length ? Math.min(...others.map((n) => effectiveZ(n, win))) : 0;
+      if (myZ >= min) setStyle(el, "z-index", min - 1);
+    } else if (direction === "forward" || direction === "backward") {
+      const stack = group.slice().sort((a, b) => effectiveZ(a, win) - effectiveZ(b, win) || domIndex.get(a) - domIndex.get(b));
+      const pos = stack.indexOf(el);
+      if (direction === "forward" && pos < stack.length - 1) {
+        const target = stack[pos + 1];
+        const tz = effectiveZ(target, win);
+        if (tz > myZ) {
+          setStyle(el, "z-index", tz);
+          setStyle(target, "z-index", myZ);
+        } else setStyle(el, "z-index", tz + 1);
+      } else if (direction === "backward" && pos > 0) {
+        const target = stack[pos - 1];
+        const tz = effectiveZ(target, win);
+        if (tz < myZ) {
+          setStyle(el, "z-index", tz);
+          setStyle(target, "z-index", myZ);
+        } else setStyle(el, "z-index", tz - 1);
+      }
+    }
+    if (children.length) addChange(state, { type: "batch", label: `layer:${direction}`, children });
+  }
+
+  // src/ui/context-menu.js
+  var ITEMS = [
+    { label: "Bring to Front", direction: "front" },
+    { label: "Bring Forward", direction: "forward" },
+    { label: "Send Backward", direction: "backward" },
+    { label: "Send to Back", direction: "back" }
+  ];
+  function isEditorOwned3(el) {
+    return !!(el && el.closest(`[${ATTR_IGNORE}]`));
+  }
+  function createContextMenu(state, modeController) {
+    const doc = state.editorRoot.ownerDocument;
+    const win = doc.defaultView;
+    const overlay = modeController.overlay;
+    const menu = createEl(doc, "div", {
+      className: cls("context-menu"),
+      attrs: { [ATTR_IGNORE]: "", role: "menu", "aria-label": "Layering" }
+    });
+    menu.style.display = "none";
+    ITEMS.forEach(({ label, direction }) => {
+      const item = createEl(doc, "button", {
+        className: cls("context-menu-item"),
+        attrs: { type: "button", role: "menuitem", [ATTR_IGNORE]: "" },
+        text: label
+      });
+      item.addEventListener("click", () => {
+        const el = state.selectedElements[0];
+        if (el && el.isConnected) applyLayer(state, el, direction);
+        close();
+      });
+      menu.appendChild(item);
+    });
+    state.editorRoot.appendChild(menu);
+    let open = false;
+    function openAt(x, y) {
+      menu.style.display = "block";
+      open = true;
+      const r = menu.getBoundingClientRect();
+      const left = Math.min(x, win.innerWidth - r.width - 4);
+      const top = Math.min(y, win.innerHeight - r.height - 4);
+      menu.style.left = `${Math.max(4, left)}px`;
+      menu.style.top = `${Math.max(4, top)}px`;
+    }
+    function close() {
+      if (!open) return;
+      menu.style.display = "none";
+      open = false;
+    }
+    function onContextMenu(e) {
+      if (!state.isEditModeEnabled) return;
+      const onMoveSurface = e.target === overlay.moveSurface;
+      if (isEditorOwned3(e.target) && !onMoveSurface) return;
+      const el = onMoveSurface ? state.selectedElements[0] : e.target;
+      if (!el) return;
+      e.preventDefault();
+      if (!state.selectedElements.includes(el)) modeController.selectElement(state, el);
+      openAt(e.clientX, e.clientY);
+    }
+    function onDocPointerDown(e) {
+      if (open && !menu.contains(e.target)) close();
+    }
+    function onScrollOrResize() {
+      close();
+    }
+    function onKeyDown(e) {
+      if (e.key === "Escape" && open) {
+        e.stopPropagation();
+        close();
+      }
+    }
+    doc.addEventListener("contextmenu", onContextMenu, true);
+    doc.addEventListener("pointerdown", onDocPointerDown, true);
+    win.addEventListener("scroll", onScrollOrResize, true);
+    win.addEventListener("resize", onScrollOrResize);
+    doc.addEventListener("keydown", onKeyDown, true);
+    return {
+      close,
+      isOpen: () => open,
+      destroy() {
+        doc.removeEventListener("contextmenu", onContextMenu, true);
+        doc.removeEventListener("pointerdown", onDocPointerDown, true);
+        win.removeEventListener("scroll", onScrollOrResize, true);
+        win.removeEventListener("resize", onScrollOrResize);
+        doc.removeEventListener("keydown", onKeyDown, true);
+        menu.remove();
+      }
+    };
+  }
+
   // src/ui/main-toolbar.js
   function createMainToolbar(state, modeController, { onSave } = {}) {
     const doc = state.editorRoot.ownerDocument;
@@ -1258,6 +1605,27 @@ var VisualEditor = (() => {
     node.remove();
     return node;
   }
+  function reparentByPath(root, fromParentPath, fromIndex, toParentPath, toIndex) {
+    const fromParent = fromPath(fromParentPath, root);
+    if (!fromParent) throw new Error("reparentByPath: from-parent not found for path " + JSON.stringify(fromParentPath));
+    const node = getEditableChildren(fromParent)[fromIndex];
+    if (!node) throw new Error("reparentByPath: no element at from-index " + fromIndex);
+    node.remove();
+    const toParent = fromPath(toParentPath, root);
+    if (!toParent) throw new Error("reparentByPath: to-parent not found for path " + JSON.stringify(toParentPath));
+    const siblings = getEditableChildren(toParent);
+    const refNode = siblings[toIndex] || null;
+    toParent.insertBefore(node, refNode);
+    return node;
+  }
+  registerHandler("move-element", {
+    forward(state, entry) {
+      reparentByPath(state.root, entry.fromParentPath, entry.fromIndex, entry.toParentPath, entry.toIndex);
+    },
+    inverse(state, entry) {
+      reparentByPath(state.root, entry.toParentPath, entry.toIndex, entry.fromParentPath, entry.fromIndex);
+    }
+  });
   registerHandler("remove-element", {
     forward(state, entry) {
       removeAtPath(state.root, entry.parentPath, entry.index);
@@ -2773,6 +3141,8 @@ ${clone.outerHTML}`;
     const state = createEditorState({ root, editorRoot, config });
     const modeController = createModeController(state);
     const resizeController = config.enableResize !== false ? createResizeController(state, modeController.overlay, config) : null;
+    const moveController = config.enableMove !== false ? createMoveController(state, modeController, config) : null;
+    const contextMenu = config.enableLayering !== false ? createContextMenu(state, modeController) : null;
     const toast = createToastHost(editorRoot);
     const confirmBeforeSave = config.confirmBeforeSave !== void 0 ? config.confirmBeforeSave : !config.onSave;
     const doSave = () => saveNow(state, toast, { confirmOverwrite: confirmBeforeSave });
@@ -2829,6 +3199,8 @@ ${clone.outerHTML}`;
       state,
       modeController,
       resizeController,
+      moveController,
+      contextMenu,
       mainToolbar,
       toolbar,
       stylePanel,
@@ -2845,6 +3217,8 @@ ${clone.outerHTML}`;
       destroy() {
         modeController.disable();
         if (resizeController) resizeController.destroy();
+        if (moveController) moveController.destroy();
+        if (contextMenu) contextMenu.destroy();
         editorRoot.remove();
         instance = null;
       }

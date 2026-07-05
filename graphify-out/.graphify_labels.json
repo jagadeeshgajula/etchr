@@ -1,0 +1,16 @@
+{
+  "0": "index.js",
+  "1": "dom-mutator.js",
+  "3": "style-mutator.js",
+  "4": "style-suggestions.js",
+  "5": "history.js",
+  "6": "package.json",
+  "7": "server.js",
+  "9": "iframe-embed-example.html",
+  "10": "esbuild.config.mjs",
+  "11": "CLAUDE.md",
+  "12": "prompt.md",
+  "13": "css-mutator.js",
+  "14": "config.js",
+  "15": "CLAUDE.md"
+}

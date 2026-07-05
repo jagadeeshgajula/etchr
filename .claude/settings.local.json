@@ -1,7 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm --version)"
+      "Bash(npm --version)",
+      "Bash(graphify .)",
+      "Bash(pip install *)",
+      "Bash(uv tool *)",
+      "Bash(graphify cluster-only *)",
+      "Bash(graphify query *)",
+      "Bash(graphify update *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git tag *)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/demo.html)",
+      "Bash(npm i *)",
+      "Bash(node *)",
+      "Bash(pkill -f \"server/server.js\")",
+      "Bash(curl -s -o /dev/null -w \"server:%{http_code}\\\\n\" http://localhost:5173/demo.html)",
+      "Bash(netstat -ano)",
+      "Bash(taskkill //PID 26252 //F)",
+      "Bash(npm remove *)",
+      "Bash(git restore *)"
     ]
   }
 }

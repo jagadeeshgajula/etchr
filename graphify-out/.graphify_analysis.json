@@ -1,0 +1,379 @@
+{
+  "communities": {
+    "0": [
+      "src_core_config",
+      "src_core_config_container_tags",
+      "src_core_config_createconfig",
+      "src_core_config_google_fonts",
+      "src_core_config_web_safe_fonts",
+      "src_core_constants",
+      "src_core_constants_cls",
+      "src_core_editor_state",
+      "src_core_editor_state_createeditorstate",
+      "src_core_editor_state_subscribe",
+      "src_dom_mode_controller",
+      "src_dom_mode_controller_createmodecontroller",
+      "src_dom_mode_controller_iseditorowned",
+      "src_dom_selection_overlay",
+      "src_dom_selection_overlay_createselectionoverlay",
+      "src_dom_text_editor_begintextedit",
+      "src_index",
+      "src_index_autoinit",
+      "src_index_ensureeditorroot",
+      "src_index_getstate",
+      "src_index_init",
+      "src_ui_breadcrumb_bar",
+      "src_ui_breadcrumb_bar_createbreadcrumbbar",
+      "src_ui_breadcrumb_bar_describeelement",
+      "src_ui_css_panel_createcsspanel",
+      "src_ui_dom_helpers",
+      "src_ui_dom_helpers_button",
+      "src_ui_dom_helpers_createel",
+      "src_ui_dom_helpers_positionnear",
+      "src_ui_elements_palette_createelementspalette",
+      "src_ui_quick_style_panel",
+      "src_ui_quick_style_panel_createquickstylepanel",
+      "src_ui_style_panel_createstylepanel",
+      "src_ui_toast",
+      "src_ui_toast_createtoasthost",
+      "src_ui_toolbar",
+      "src_ui_toolbar_createtoolbar"
+    ],
+    "1": [
+      "src_core_element_path",
+      "src_core_element_path_frompath",
+      "src_core_element_path_getancestorchain",
+      "src_core_element_path_geteditablechildren",
+      "src_core_element_path_topath",
+      "src_core_history_registerhandler",
+      "src_dom_attribute_mutator",
+      "src_dom_attribute_mutator_applyattr",
+      "src_dom_attribute_mutator_forward",
+      "src_dom_attribute_mutator_inverse",
+      "src_dom_dom_mutator",
+      "src_dom_dom_mutator_addelement",
+      "src_dom_dom_mutator_forward",
+      "src_dom_dom_mutator_insertatpath",
+      "src_dom_dom_mutator_inverse",
+      "src_dom_dom_mutator_nodefromouterhtml",
+      "src_dom_dom_mutator_removeatpath",
+      "src_dom_dom_mutator_removeelement",
+      "src_dom_dom_mutator_removeelements",
+      "src_dom_element_factory",
+      "src_dom_element_factory_createdefaultelement",
+      "src_dom_element_factory_element_categories",
+      "src_dom_element_factory_makeli",
+      "src_dom_text_editor",
+      "src_dom_text_editor_forward",
+      "src_dom_text_editor_inverse",
+      "src_ui_elements_palette",
+      "src_ui_elements_palette_resolveplacement"
+    ],
+    "2": [
+      "src_core_debounce",
+      "src_core_debounce_debounce",
+      "src_css_css_mutator",
+      "src_css_css_mutator_addcssrule",
+      "src_css_css_mutator_commitcssedit",
+      "src_css_css_mutator_forward",
+      "src_css_css_mutator_inverse",
+      "src_css_css_mutator_setorremove",
+      "src_css_rule_matcher",
+      "src_css_rule_matcher_bestmatchspecificity",
+      "src_css_rule_matcher_getmatchingrules",
+      "src_css_rule_matcher_isgroupingrule",
+      "src_css_rule_matcher_readproperties",
+      "src_css_rule_matcher_resolverule",
+      "src_css_rule_matcher_walkrulelist",
+      "src_css_specificity",
+      "src_css_specificity_comparespecificity",
+      "src_css_specificity_computespecificity",
+      "src_css_specificity_formatspecificity",
+      "src_css_specificity_splitselectorlist",
+      "src_css_stylesheet_registry",
+      "src_css_stylesheet_registry_getorcreateeditablestylesheet",
+      "src_css_stylesheet_registry_indexofsheet",
+      "src_ui_css_panel"
+    ],
+    "3": [
+      "src_dom_attribute_mutator_commitattribute",
+      "src_dom_style_mutator",
+      "src_dom_style_mutator_applystyle",
+      "src_dom_style_mutator_applystylebatch",
+      "src_dom_style_mutator_applystylebatchtomany",
+      "src_dom_style_mutator_applystyletomany",
+      "src_dom_style_mutator_commitstyle",
+      "src_dom_style_mutator_forward",
+      "src_dom_style_mutator_inverse",
+      "src_dom_style_mutator_listinlinestyles",
+      "src_dom_style_mutator_previewstyle",
+      "src_dom_style_mutator_readinlinevalue",
+      "src_dom_style_mutator_removeinlinestyle",
+      "src_ui_google_fonts",
+      "src_ui_google_fonts_ensuregooglefont",
+      "src_ui_google_fonts_loaded",
+      "src_ui_image_panel",
+      "src_ui_image_panel_createimagepanel",
+      "src_ui_image_panel_readfileasdataurl",
+      "src_ui_style_panel",
+      "src_ui_style_panel_currentvalue",
+      "src_ui_style_panel_font_weights",
+      "src_ui_style_panel_rgbtohex",
+      "src_ui_style_panel_text_aligns"
+    ],
+    "4": [
+      "src_css_nl_parser",
+      "src_css_nl_parser_borderstyle",
+      "src_css_nl_parser_borderthickness",
+      "src_css_nl_parser_dedupe",
+      "src_css_nl_parser_findcolors",
+      "src_css_nl_parser_findside",
+      "src_css_nl_parser_firstcolor",
+      "src_css_nl_parser_firstlength",
+      "src_css_nl_parser_named_colors",
+      "src_css_nl_parser_parsenaturallanguage",
+      "src_css_style_suggestions",
+      "src_css_style_suggestions_button",
+      "src_css_style_suggestions_category_by_tag",
+      "src_css_style_suggestions_container",
+      "src_css_style_suggestions_d",
+      "src_css_style_suggestions_generic",
+      "src_css_style_suggestions_getsuggestionsforelement",
+      "src_css_style_suggestions_heading",
+      "src_css_style_suggestions_image",
+      "src_css_style_suggestions_input",
+      "src_css_style_suggestions_link",
+      "src_css_style_suggestions_list",
+      "src_css_style_suggestions_text"
+    ],
+    "5": [
+      "src_core_editor_state_notify",
+      "src_core_history",
+      "src_core_history_addchange",
+      "src_core_history_canredo",
+      "src_core_history_canundo",
+      "src_core_history_forward",
+      "src_core_history_gethandler",
+      "src_core_history_handlers",
+      "src_core_history_inverse",
+      "src_core_history_prunestaleselection",
+      "src_core_history_redo",
+      "src_core_history_undo",
+      "src_dom_keyboard_shortcuts",
+      "src_dom_keyboard_shortcuts_installkeyboardshortcuts",
+      "src_dom_keyboard_shortcuts_native_text_inputs",
+      "src_dom_keyboard_shortcuts_shouldyieldtonativeundo",
+      "src_dom_text_editor_iseditingtext",
+      "src_ui_main_toolbar",
+      "src_ui_main_toolbar_createmaintoolbar"
+    ],
+    "6": [
+      "package",
+      "package_dependencies",
+      "package_dependencies_express",
+      "package_description",
+      "package_devdependencies",
+      "package_devdependencies_esbuild",
+      "package_name",
+      "package_private",
+      "package_scripts",
+      "package_scripts_build",
+      "package_scripts_serve",
+      "package_scripts_watch",
+      "package_type",
+      "package_version"
+    ],
+    "7": [
+      "readmemd",
+      "server_save_page",
+      "server_save_page_createsavepagehandler",
+      "server_server",
+      "server_server_app",
+      "server_server_demo_root",
+      "server_server_dirname",
+      "server_server_root"
+    ],
+    "8": [
+      "src_dom_text_editor_commitactiveedit",
+      "src_save_save_client",
+      "src_save_save_client_savenow",
+      "src_serialize_html_serializer",
+      "src_serialize_html_serializer_content_marker_attrs",
+      "src_serialize_html_serializer_getcleanhtml"
+    ],
+    "9": [
+      "demo_demo_demo_demo",
+      "demo_iframe_embed_example",
+      "dist_editor_css",
+      "dist_editor_js"
+    ],
+    "10": [
+      "esbuild_config",
+      "esbuild_config_cssoptions",
+      "esbuild_config_jsoptions",
+      "esbuild_config_watch"
+    ],
+    "11": [
+      "claudemd"
+    ],
+    "12": [
+      "promptmd"
+    ]
+  },
+  "cohesion": {
+    "0": 0.17717717717717718,
+    "1": 0.17989417989417988,
+    "2": 0.1956521739130435,
+    "3": 0.15217391304347827,
+    "4": 0.1225296442687747,
+    "5": 0.28654970760233917,
+    "6": 0.14285714285714285,
+    "7": 0.2857142857142857,
+    "8": 0.5333333333333333,
+    "9": 0.6666666666666666,
+    "10": 0.5,
+    "11": 1.0,
+    "12": 1.0
+  },
+  "gods": [
+    {
+      "id": "src_core_constants_cls",
+      "label": "cls()",
+      "degree": 23
+    },
+    {
+      "id": "src_core_history_addchange",
+      "label": "addChange()",
+      "degree": 21
+    },
+    {
+      "id": "src_index_init",
+      "label": "init()",
+      "degree": 20
+    },
+    {
+      "id": "src_ui_dom_helpers_createel",
+      "label": "createEl()",
+      "degree": 20
+    },
+    {
+      "id": "src_core_editor_state_subscribe",
+      "label": "subscribe()",
+      "degree": 19
+    },
+    {
+      "id": "src_core_element_path_topath",
+      "label": "toPath()",
+      "degree": 16
+    },
+    {
+      "id": "src_core_element_path_frompath",
+      "label": "fromPath()",
+      "degree": 15
+    },
+    {
+      "id": "src_ui_main_toolbar_createmaintoolbar",
+      "label": "createMainToolbar()",
+      "degree": 12
+    },
+    {
+      "id": "src_ui_image_panel_createimagepanel",
+      "label": "createImagePanel()",
+      "degree": 11
+    },
+    {
+      "id": "src_core_element_path_geteditablechildren",
+      "label": "getEditableChildren()",
+      "degree": 10
+    }
+  ],
+  "surprises": [
+    {
+      "source": "createImagePanel()",
+      "target": "cls()",
+      "source_files": [
+        "src/ui/image-panel.js",
+        "src/core/constants.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "createMainToolbar()",
+      "target": "cls()",
+      "source_files": [
+        "src/ui/main-toolbar.js",
+        "src/core/constants.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "createCssPanel()",
+      "target": "debounce()",
+      "source_files": [
+        "src/ui/css-panel.js",
+        "src/core/debounce.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "createImagePanel()",
+      "target": "subscribe()",
+      "source_files": [
+        "src/ui/image-panel.js",
+        "src/core/editor-state.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    },
+    {
+      "source": "createMainToolbar()",
+      "target": "subscribe()",
+      "source_files": [
+        "src/ui/main-toolbar.js",
+        "src/core/editor-state.js"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "bridges separate communities"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `addChange()` connect `history.js` to `index.js`, `dom-mutator.js`, `css-panel.js`, `style-mutator.js`?",
+      "why": "High betweenness centrality (0.047) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `cls()` connect `index.js` to `dom-mutator.js`, `css-panel.js`, `style-mutator.js`, `history.js`?",
+      "why": "High betweenness centrality (0.042) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `createEl()` connect `index.js` to `dom-mutator.js`, `css-panel.js`, `style-mutator.js`, `history.js`?",
+      "why": "High betweenness centrality (0.032) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `watch`, `jsOptions`, `cssOptions` to the rest of the system?",
+      "why": "36 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `style-suggestions.js` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.1225296442687747 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `package.json` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

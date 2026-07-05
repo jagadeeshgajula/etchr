@@ -56,6 +56,42 @@
 .vve-resize-handle-w {
   cursor: ew-resize;
 }
+.vve-move-surface {
+  position: fixed;
+  z-index: 2147483000;
+  pointer-events: auto;
+  cursor: move;
+  background: transparent;
+}
+.vve-context-menu {
+  position: fixed;
+  z-index: 2147483004;
+  min-width: 168px;
+  background: #232936;
+  border: 1px solid #333c4d;
+  border-radius: 8px;
+  padding: 4px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.vve-context-menu-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #e8ecf3;
+  text-align: left;
+  padding: 7px 12px;
+  border-radius: 5px;
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.vve-context-menu-item:hover {
+  background: #2f6fed;
+}
 .vve-main-toolbar {
   position: fixed;
   top: 12px;

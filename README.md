@@ -15,6 +15,8 @@ No build step is required to *use* it — just the bundled `dist/editor.js` and 
 
 - **Select anything** — hover outline + click-to-select any element on the page.
 - **Drag-to-resize with 8 handles** — the moment you select an element, eight resize handles (four corners + four edge midpoints) appear on its border. Drag any handle to freely resize the element; west/north handles keep the opposite edge visually anchored using margin compensation, so elements in normal document flow resize as you'd expect. Neighboring elements reflow live as you drag, and the whole gesture is a single undo step.
+- **Drag-to-move (freeform canvas)** — drag the *interior* of a selected element (the border stays reserved for the resize handles) to move it anywhere on the page. On the first drag the element is promoted to an absolutely-positioned overlay in page coordinates — the PowerPoint-canvas model — so it lifts out of the document flow and can be placed over, or under, anything else. Frozen at its rendered size so it doesn't collapse, and the whole gesture is one undo step.
+- **Layering (Bring to Front / Send to Back)** — right-click any element for a PowerPoint-style layering menu: **Bring to Front**, **Bring Forward**, **Send Backward**, **Send to Back**. Overlapping elements restack via `z-index` (statically-positioned elements are promoted to `position: relative` first so the change actually takes effect). Every command is a single undo step and serializes into the saved HTML.
 - **Auto-responsive CSS (background)** — resizing an element auto-authors the responsive CSS you'd otherwise write by hand: a `max-width: 100%` safety guard, `flex-wrap: wrap` on a flex parent when a child would overflow, and real `@media` breakpoint rules (tablet ≤768px, mobile ≤480px by default) that cap the element at its new size so the layout holds up on smaller screens. Repeated resizes update the same rules in place instead of piling up duplicates. Fully undoable and emitted into the saved HTML.
 - **Inline text editing** — edit text content directly, plain-text-safe (no pasted markup leaks in).
 - **Font & style panel** — change font family, size, color, weight, alignment, spacing, etc. live.
@@ -155,6 +157,8 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 | `debounceMs` | `number` | `150` | Debounce for CSS rescans on selection change. |
 | `fontFamilies` / `googleFonts` | `string[]` | built-in lists | Customize the font pickers. |
 | `enableResize` | `boolean` | `true` | Show the 8 drag-to-resize handles on the selected element. Set `false` to disable resizing entirely. |
+| `enableMove` | `boolean` | `true` | Allow dragging a selected element's interior to move it anywhere (promotes it to an absolutely-positioned, page-coordinate overlay). Set `false` to keep elements pinned in normal document flow. |
+| `enableLayering` | `boolean` | `true` | Show the right-click layering menu (Bring to Front / Send to Back / Bring Forward / Send Backward) that restacks overlapping elements via `z-index`. Set `false` to disable it. |
 | `autoResponsiveCss` | `boolean` | `true` | Whether resizing auto-injects reflow fixes + `@media` breakpoint rules. Set `false` to record only the raw width/height change. |
 | `resizeMinSize` | `number` | `24` | Minimum width/height (px) a drag can shrink an element to. |
 | `responsiveBreakpoints` | `string[]` | `['tablet', 'mobile']` | Which breakpoint tiers to generate on resize. `tablet` = `(max-width: 768px)`, `mobile` = `(max-width: 480px)`. Pass `[]` to keep the same-viewport reflow fixes but skip `@media` generation. |
@@ -171,13 +175,16 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 | `Ctrl+S` | Save |
 | `Shift+Click` | Add/remove element from multi-selection |
 | `Drag a resize handle` | Resize the selected element (corner = both axes, edge = one axis); auto-generates responsive CSS |
-| `Escape` | Close the open panel / palette, or clear selection |
+| `Drag the element interior` | Move the selected element anywhere on the page (freeform absolute positioning) |
+| `Right-click an element` | Open the layering menu: Bring to Front / Bring Forward / Send Backward / Send to Back |
+| `Escape` | Close the layering menu / open panel / palette, or clear selection |
 
 ---
 
 ## How it works (architecture notes)
 
-- **Single source of truth for mutations.** Every undoable change (`text-edit`, `set-style`, `add-element`, `remove-element`, `edit-css-rule`, `add-css-rule`, `add-media-rule`, `insert-css-rule`, `set-attribute`, `batch`) is described as data and applied through one `addChange()` / `undo()` / `redo()` engine (`src/core/history.js`). UI modules never mutate the DOM directly — they compute old/new values and dispatch a change. This keeps undo/redo provably consistent.
+- **Single source of truth for mutations.** Every undoable change (`text-edit`, `set-style`, `add-element`, `remove-element`, `move-element`, `edit-css-rule`, `add-css-rule`, `add-media-rule`, `insert-css-rule`, `set-attribute`, `batch`) is described as data and applied through one `addChange()` / `undo()` / `redo()` engine (`src/core/history.js`). UI modules never mutate the DOM directly — they compute old/new values and dispatch a change. This keeps undo/redo provably consistent.
+- **Move = reparent + restyle, atomically.** A drag-to-move gesture emits one `batch` bundling a `move-element` (which relocates the *live* node — not a re-parsed clone — so selections survive undo/redo) and the `set-style`s that make it an absolutely-positioned overlay. Layering commands are pure `set-style` `z-index` batches.
 - **Composed batches for resize.** A single resize gesture emits one `batch` bundling the width/height/margin changes, the reflow fix, the stable-class assignment, and every `@media` rule — so the whole gesture (visual resize *and* the responsive CSS authored in the background) undoes and redoes atomically.
 - **CSSOM rules are materialized on save.** Rules added via `insertRule()` live only on the live stylesheet object, so the serializer writes each editor-created sheet's current `cssRules` back into its `<style>` element before emitting the clean HTML — otherwise CSS-editor and auto-responsive rules would serialize as an empty `<style>`.
 - **Positional element paths.** Elements are addressed by an array of child-element indices from the root (`src/core/element-path.js`), skipping editor-owned nodes and text-node whitespace, so paths stay valid across a linear history.
@@ -193,6 +200,8 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 - Shadow DOM content and true cross-origin iframes are out of scope (the script can't be injected into a document it doesn't control). Same-origin iframes are fully supported.
 - Auto-responsive breakpoints use a conservative `width: 100%` + `max-width: <resized>px` cap rather than simulating a narrower viewport (which isn't possible against the live host document), so they only ever shrink an element relative to its authored desktop size. Fine-tune the generated rules in the CSS panel if you need different behavior at a breakpoint.
 - Resize handles target a single selected element; multi-select resizing is out of scope.
+- Drag-to-move promotes an element to `position: absolute` and reparents it to `<body>` for true page-global coordinates. Because it leaves its original container, descendant-based CSS (e.g. `.card > .title { … }`) no longer matches it — restyle via the CSS panel if you rely on such rules. Absolute placement uses fixed pixel coordinates, so moved elements are not auto-made-responsive the way resizing is.
+- Layering targets a single element and restacks it only against its own siblings (the elements it can actually overlap); moving is what brings elements into a shared stacking context.
 
 ---
 

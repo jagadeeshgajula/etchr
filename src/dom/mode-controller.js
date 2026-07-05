@@ -9,7 +9,7 @@ function isEditorOwned(el) {
 export function createModeController(state) {
   const doc = state.root.ownerDocument;
   const win = doc.defaultView;
-  const overlay = createSelectionOverlay(state.editorRoot);
+  const overlay = createSelectionOverlay(state.editorRoot, { enableMove: state.config.enableMove !== false });
   let attached = false;
 
   function onMouseOver(e) {

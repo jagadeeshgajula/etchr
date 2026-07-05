@@ -3,7 +3,9 @@ import { createConfig } from './core/config.js';
 import { createEditorState } from './core/editor-state.js';
 import { createModeController } from './dom/mode-controller.js';
 import { createResizeController } from './dom/resize-controller.js';
+import { createMoveController } from './dom/move-controller.js';
 import { installKeyboardShortcuts } from './dom/keyboard-shortcuts.js';
+import { createContextMenu } from './ui/context-menu.js';
 import { createMainToolbar } from './ui/main-toolbar.js';
 import { createToolbar } from './ui/toolbar.js';
 import { createStylePanel } from './ui/style-panel.js';
@@ -44,6 +46,12 @@ function init(options = {}) {
   const modeController = createModeController(state);
   const resizeController = config.enableResize !== false
     ? createResizeController(state, modeController.overlay, config)
+    : null;
+  const moveController = config.enableMove !== false
+    ? createMoveController(state, modeController, config)
+    : null;
+  const contextMenu = config.enableLayering !== false
+    ? createContextMenu(state, modeController)
     : null;
   const toast = createToastHost(editorRoot);
 
@@ -124,6 +132,8 @@ function init(options = {}) {
     state,
     modeController,
     resizeController,
+    moveController,
+    contextMenu,
     mainToolbar,
     toolbar,
     stylePanel,
@@ -140,6 +150,8 @@ function init(options = {}) {
     destroy() {
       modeController.disable();
       if (resizeController) resizeController.destroy();
+      if (moveController) moveController.destroy();
+      if (contextMenu) contextMenu.destroy();
       editorRoot.remove();
       instance = null;
     },

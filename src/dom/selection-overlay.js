@@ -4,7 +4,7 @@ import { cls, ATTR_IGNORE } from '../core/constants.js';
 const HANDLE_DIRS = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 const HANDLE_SIZE = 8;
 
-export function createSelectionOverlay(editorRoot) {
+export function createSelectionOverlay(editorRoot, { enableMove = true } = {}) {
   const doc = editorRoot.ownerDocument;
 
   const hover = doc.createElement('div');
@@ -12,6 +12,16 @@ export function createSelectionOverlay(editorRoot) {
   hover.setAttribute(ATTR_IGNORE, '');
   hover.style.display = 'none';
   editorRoot.appendChild(hover);
+
+  // Transparent drag surface laid over a single selected element so it can be
+  // dragged to move (see move-controller.js). Kept below the resize handles in
+  // the stacking order so edge/corner drags still resize; only the interior
+  // moves. Never shown for multi-select (no single unambiguous move target).
+  const moveSurface = doc.createElement('div');
+  moveSurface.className = cls('move-surface');
+  moveSurface.setAttribute(ATTR_IGNORE, '');
+  moveSurface.style.display = 'none';
+  editorRoot.appendChild(moveSurface);
 
   // Pool of reusable outline divs for multi-select — grown on demand, never
   // shrunk (excess divs are just hidden), so repeated selection changes don't
@@ -70,6 +80,25 @@ export function createSelectionOverlay(editorRoot) {
     handles.forEach(({ el }) => (el.style.display = 'none'));
   }
 
+  function positionMoveSurface(targetEl) {
+    // No surface for unmovable targets: the editable root itself (usually
+    // <body>) or anything containing it (e.g. <html>). Reparenting those would
+    // throw, and covering the whole page with a move surface over <body> hijacks
+    // every click. Keeping the surface off lets normal selection work there.
+    const root = editorRoot.ownerDocument.body;
+    const unmovable = targetEl && (targetEl === root || (targetEl.contains && targetEl.contains(root)) || !targetEl.parentElement);
+    if (!enableMove || !targetEl || !targetEl.isConnected || unmovable) {
+      moveSurface.style.display = 'none';
+      return;
+    }
+    const r = targetEl.getBoundingClientRect();
+    moveSurface.style.display = 'block';
+    moveSurface.style.top = `${r.top}px`;
+    moveSurface.style.left = `${r.left}px`;
+    moveSurface.style.width = `${r.width}px`;
+    moveSurface.style.height = `${r.height}px`;
+  }
+
   function positionOverlay(overlayEl, targetEl) {
     if (!targetEl || !targetEl.isConnected) {
       overlayEl.style.display = 'none';
@@ -89,14 +118,20 @@ export function createSelectionOverlay(editorRoot) {
       if (i < elements.length) positionOverlay(div, elements[i]);
       else div.style.display = 'none';
     });
-    // Resize handles only make sense for a single, unambiguous target.
-    if (elements.length === 1 && elements[0].isConnected) positionHandles(elements[0]);
-    else hideHandles();
+    // Resize handles + move surface only make sense for a single, unambiguous target.
+    if (elements.length === 1 && elements[0].isConnected) {
+      positionHandles(elements[0]);
+      positionMoveSurface(elements[0]);
+    } else {
+      hideHandles();
+      moveSurface.style.display = 'none';
+    }
   }
 
   function hideSelected() {
     selectedPool.forEach((div) => (div.style.display = 'none'));
     hideHandles();
+    moveSurface.style.display = 'none';
   }
 
   return {
@@ -109,6 +144,7 @@ export function createSelectionOverlay(editorRoot) {
     showSelectedMany,
     hideSelected,
     handles,
+    moveSurface,
     reposition(hoveredEl, selectedElements) {
       positionOverlay(hover, hoveredEl);
       showSelectedMany(selectedElements || []);
@@ -117,6 +153,7 @@ export function createSelectionOverlay(editorRoot) {
       hover.remove();
       selectedPool.forEach((d) => d.remove());
       handles.forEach(({ el }) => el.remove());
+      moveSurface.remove();
     },
   };
 }

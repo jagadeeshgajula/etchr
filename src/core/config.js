@@ -41,6 +41,13 @@ export function createConfig(overrides = {}) {
     autoResponsiveCss: true,
     resizeMinSize: 24,
     responsiveBreakpoints: ['tablet', 'mobile'],
+    // Drag a selected element to move it anywhere on the page (promotes it to
+    // an absolutely-positioned, page-coordinate overlay — PowerPoint-canvas
+    // style). Set false to keep elements pinned in normal document flow.
+    enableMove: true,
+    // Right-click layering menu (Bring to Front / Send to Back / Bring Forward /
+    // Send Backward) that reorders overlapping elements via z-index.
+    enableLayering: true,
     fontFamilies: [...WEB_SAFE_FONTS],
     googleFonts: [...GOOGLE_FONTS],
     containerTags: CONTAINER_TAGS,

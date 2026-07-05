@@ -32,6 +32,39 @@ export function removeAtPath(root, parentPath, index) {
   return node;
 }
 
+/**
+ * Moves the LIVE editable node at (fromParentPath, fromIndex) so it becomes the
+ * (toIndex)-th editable child of the element at toParentPath. Unlike
+ * remove-element + add-element (which re-parse from outerHTML and thus mint a
+ * brand-new node), this relocates the exact same DOM node — so a live selection
+ * reference held by a panel/overlay stays valid across the move, and across
+ * undo/redo of it. Indices are resolved live AFTER the node is detached, mirroring
+ * insertAtPath's ref-node semantics.
+ */
+export function reparentByPath(root, fromParentPath, fromIndex, toParentPath, toIndex) {
+  const fromParent = fromPath(fromParentPath, root);
+  if (!fromParent) throw new Error('reparentByPath: from-parent not found for path ' + JSON.stringify(fromParentPath));
+  const node = getEditableChildren(fromParent)[fromIndex];
+  if (!node) throw new Error('reparentByPath: no element at from-index ' + fromIndex);
+  node.remove();
+  const toParent = fromPath(toParentPath, root);
+  if (!toParent) throw new Error('reparentByPath: to-parent not found for path ' + JSON.stringify(toParentPath));
+  const siblings = getEditableChildren(toParent);
+  const refNode = siblings[toIndex] || null;
+  toParent.insertBefore(node, refNode);
+  return node;
+}
+
+registerHandler('move-element', {
+  forward(state, entry) {
+    reparentByPath(state.root, entry.fromParentPath, entry.fromIndex, entry.toParentPath, entry.toIndex);
+  },
+  inverse(state, entry) {
+    // On inverse the node currently sits at (toParentPath, toIndex); send it home.
+    reparentByPath(state.root, entry.toParentPath, entry.toIndex, entry.fromParentPath, entry.fromIndex);
+  },
+});
+
 registerHandler('remove-element', {
   forward(state, entry) {
     removeAtPath(state.root, entry.parentPath, entry.index);

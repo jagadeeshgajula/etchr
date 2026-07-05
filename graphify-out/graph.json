@@ -21,7 +21,7 @@
         "nodes": [
           "src_serialize_html_serializer",
           "server_save_page",
-          "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo"
+          "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo_demo"
         ],
         "relation": "participate_in",
         "confidence": "INFERRED",
@@ -344,7 +344,7 @@
       "label": "cls()",
       "file_type": "code",
       "source_file": "src/core/constants.js",
-      "source_location": "L9",
+      "source_location": "L13",
       "_origin": "ast",
       "id": "src_core_constants_cls",
       "community": 0,
@@ -394,7 +394,7 @@
       "label": "subscribe()",
       "file_type": "code",
       "source_file": "src/core/editor-state.js",
-      "source_location": "L20",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "src_core_editor_state_subscribe",
       "community": 0,
@@ -404,7 +404,7 @@
       "label": "notify()",
       "file_type": "code",
       "source_file": "src/core/editor-state.js",
-      "source_location": "L25",
+      "source_location": "L29",
       "_origin": "ast",
       "id": "src_core_editor_state_notify",
       "community": 5,
@@ -437,7 +437,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_core_element_path_topath",
-      "community": 3,
+      "community": 1,
       "norm_label": "topath()"
     },
     {
@@ -517,7 +517,7 @@
       "source_location": "L37",
       "_origin": "ast",
       "id": "src_core_history_addchange",
-      "community": 3,
+      "community": 5,
       "norm_label": "addchange()"
     },
     {
@@ -647,7 +647,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "src_css_css_mutator_describeresponsiveupsert",
-      "community": 13,
+      "community": 3,
       "norm_label": "describeresponsiveupsert()"
     },
     {
@@ -797,7 +797,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_css_rule_matcher",
-      "community": 2,
+      "community": 13,
       "norm_label": "rule-matcher.js"
     },
     {
@@ -807,7 +807,7 @@
       "source_location": "L3",
       "_origin": "ast",
       "id": "src_css_rule_matcher_readproperties",
-      "community": 2,
+      "community": 13,
       "norm_label": "readproperties()"
     },
     {
@@ -817,7 +817,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_css_rule_matcher_bestmatchspecificity",
-      "community": 2,
+      "community": 13,
       "norm_label": "bestmatchspecificity()"
     },
     {
@@ -827,7 +827,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_css_rule_matcher_isgroupingrule",
-      "community": 2,
+      "community": 13,
       "norm_label": "isgroupingrule()"
     },
     {
@@ -837,7 +837,7 @@
       "source_location": "L38",
       "_origin": "ast",
       "id": "src_css_rule_matcher_walkrulelist",
-      "community": 2,
+      "community": 13,
       "norm_label": "walkrulelist()"
     },
     {
@@ -847,7 +847,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_css_rule_matcher_getmatchingrules",
-      "community": 2,
+      "community": 13,
       "norm_label": "getmatchingrules()"
     },
     {
@@ -877,7 +877,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_css_specificity",
-      "community": 2,
+      "community": 13,
       "norm_label": "specificity.js"
     },
     {
@@ -887,7 +887,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_css_specificity_splitselectorlist",
-      "community": 2,
+      "community": 13,
       "norm_label": "splitselectorlist()"
     },
     {
@@ -897,7 +897,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_css_specificity_computespecificity",
-      "community": 2,
+      "community": 13,
       "norm_label": "computespecificity()"
     },
     {
@@ -907,7 +907,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_css_specificity_comparespecificity",
-      "community": 2,
+      "community": 13,
       "norm_label": "comparespecificity()"
     },
     {
@@ -917,7 +917,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_css_specificity_formatspecificity",
-      "community": 2,
+      "community": 13,
       "norm_label": "formatspecificity()"
     },
     {
@@ -1717,7 +1717,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_dom_text_editor_begintextedit",
-      "community": 3,
+      "community": 5,
       "norm_label": "begintextedit()"
     },
     {
@@ -1734,7 +1734,7 @@
       "label": "ensureEditorRoot()",
       "file_type": "code",
       "source_file": "src/index.js",
-      "source_location": "L26",
+      "source_location": "L29",
       "_origin": "ast",
       "id": "src_index_ensureeditorroot",
       "community": 0,
@@ -1744,7 +1744,7 @@
       "label": "init()",
       "file_type": "code",
       "source_file": "src/index.js",
-      "source_location": "L37",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "src_index_init",
       "community": 0,
@@ -1754,17 +1754,57 @@
       "label": "getState()",
       "file_type": "code",
       "source_file": "src/index.js",
-      "source_location": "L162",
+      "source_location": "L186",
       "_origin": "ast",
       "id": "src_index_getstate",
       "community": 0,
       "norm_label": "getstate()"
     },
     {
+      "label": "getInstance()",
+      "file_type": "code",
+      "source_file": "src/index.js",
+      "source_location": "L190",
+      "_origin": "ast",
+      "id": "src_index_getinstance",
+      "community": 0,
+      "norm_label": "getinstance()"
+    },
+    {
+      "label": "isDirty()",
+      "file_type": "code",
+      "source_file": "src/index.js",
+      "source_location": "L197",
+      "_origin": "ast",
+      "id": "src_index_isdirty",
+      "community": 0,
+      "norm_label": "isdirty()"
+    },
+    {
+      "label": "openEditor()",
+      "file_type": "code",
+      "source_file": "src/index.js",
+      "source_location": "L209",
+      "_origin": "ast",
+      "id": "src_index_openeditor",
+      "community": 0,
+      "norm_label": "openeditor()"
+    },
+    {
+      "label": "mountLauncher()",
+      "file_type": "code",
+      "source_file": "src/index.js",
+      "source_location": "L220",
+      "_origin": "ast",
+      "id": "src_index_mountlauncher",
+      "community": 0,
+      "norm_label": "mountlauncher()"
+    },
+    {
       "label": "autoInit()",
       "file_type": "code",
       "source_file": "src/index.js",
-      "source_location": "L170",
+      "source_location": "L230",
       "_origin": "ast",
       "id": "src_index_autoinit",
       "community": 0,
@@ -1784,7 +1824,7 @@
       "label": "saveNow()",
       "file_type": "code",
       "source_file": "src/save/save-client.js",
-      "source_location": "L9",
+      "source_location": "L11",
       "_origin": "ast",
       "id": "src_save_save_client_savenow",
       "community": 5,
@@ -1851,13 +1891,33 @@
       "norm_label": "createbreadcrumbbar()"
     },
     {
+      "label": "confirm-dialog.js",
+      "file_type": "code",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_ui_confirm_dialog",
+      "community": 0,
+      "norm_label": "confirm-dialog.js"
+    },
+    {
+      "label": "confirmDialog()",
+      "file_type": "code",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "src_ui_confirm_dialog_confirmdialog",
+      "community": 0,
+      "norm_label": "confirmdialog()"
+    },
+    {
       "label": "context-menu.js",
       "file_type": "code",
       "source_file": "src/ui/context-menu.js",
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_ui_context_menu",
-      "community": 1,
+      "community": 0,
       "norm_label": "context-menu.js"
     },
     {
@@ -1867,7 +1927,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_ui_context_menu_items",
-      "community": 1,
+      "community": 0,
       "norm_label": "items"
     },
     {
@@ -1877,7 +1937,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_ui_context_menu_iseditorowned",
-      "community": 1,
+      "community": 0,
       "norm_label": "iseditorowned()"
     },
     {
@@ -1887,7 +1947,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_ui_context_menu_createcontextmenu",
-      "community": 1,
+      "community": 0,
       "norm_label": "createcontextmenu()"
     },
     {
@@ -1951,6 +2011,26 @@
       "norm_label": "positionnear()"
     },
     {
+      "label": "editor-modal.js",
+      "file_type": "code",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_ui_editor_modal",
+      "community": 0,
+      "norm_label": "editor-modal.js"
+    },
+    {
+      "label": "openEditorModal()",
+      "file_type": "code",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L20",
+      "_origin": "ast",
+      "id": "src_ui_editor_modal_openeditormodal",
+      "community": 0,
+      "norm_label": "openeditormodal()"
+    },
+    {
       "label": "elements-palette.js",
       "file_type": "code",
       "source_file": "src/ui/elements-palette.js",
@@ -1987,7 +2067,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_ui_google_fonts",
-      "community": 0,
+      "community": 3,
       "norm_label": "google-fonts.js"
     },
     {
@@ -1997,7 +2077,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_ui_google_fonts_loaded",
-      "community": 0,
+      "community": 3,
       "norm_label": "loaded"
     },
     {
@@ -2007,8 +2087,38 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_ui_google_fonts_ensuregooglefont",
-      "community": 0,
+      "community": 3,
       "norm_label": "ensuregooglefont()"
+    },
+    {
+      "label": "icons.js",
+      "file_type": "code",
+      "source_file": "src/ui/icons.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_ui_icons",
+      "community": 0,
+      "norm_label": "icons.js"
+    },
+    {
+      "label": "icons",
+      "file_type": "code",
+      "source_file": "src/ui/icons.js",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "src_ui_icons_icons",
+      "community": 0,
+      "norm_label": "icons"
+    },
+    {
+      "label": "svg()",
+      "file_type": "code",
+      "source_file": "src/ui/icons.js",
+      "source_location": "L27",
+      "_origin": "ast",
+      "id": "src_ui_icons_svg",
+      "community": 0,
+      "norm_label": "svg()"
     },
     {
       "label": "image-panel.js",
@@ -2039,6 +2149,26 @@
       "id": "src_ui_image_panel_createimagepanel",
       "community": 3,
       "norm_label": "createimagepanel()"
+    },
+    {
+      "label": "launcher.js",
+      "file_type": "code",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "src_ui_launcher",
+      "community": 0,
+      "norm_label": "launcher.js"
+    },
+    {
+      "label": "createLauncher()",
+      "file_type": "code",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L10",
+      "_origin": "ast",
+      "id": "src_ui_launcher_createlauncher",
+      "community": 0,
+      "norm_label": "createlauncher()"
     },
     {
       "label": "main-toolbar.js",
@@ -2087,7 +2217,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_ui_style_panel",
-      "community": 0,
+      "community": 3,
       "norm_label": "style-panel.js"
     },
     {
@@ -2097,7 +2227,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_ui_style_panel_font_weights",
-      "community": 0,
+      "community": 3,
       "norm_label": "font_weights"
     },
     {
@@ -2107,7 +2237,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_ui_style_panel_text_aligns",
-      "community": 0,
+      "community": 3,
       "norm_label": "text_aligns"
     },
     {
@@ -2117,7 +2247,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_ui_style_panel_rgbtohex",
-      "community": 0,
+      "community": 3,
       "norm_label": "rgbtohex()"
     },
     {
@@ -2127,7 +2257,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_ui_style_panel_currentvalue",
-      "community": 0,
+      "community": 3,
       "norm_label": "currentvalue()"
     },
     {
@@ -2551,13 +2681,173 @@
       "norm_label": "prompt end"
     },
     {
+      "label": "react_integration.md",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "react_integration",
+      "community": 2,
+      "norm_label": "react_integration.md"
+    },
+    {
+      "label": "Integrating Etchr into a React App",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "react_integration_integrating_etchr_into_a_react_app",
+      "community": 2,
+      "norm_label": "integrating etchr into a react app"
+    },
+    {
+      "label": "1. The golden rule: Etchr edits *content*, not your React components",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L12",
+      "_origin": "ast",
+      "id": "react_integration_1_the_golden_rule_etchr_edits_content_not_your_react_components",
+      "community": 2,
+      "norm_label": "1. the golden rule: etchr edits *content*, not your react components"
+    },
+    {
+      "label": "2. Setup",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L38",
+      "_origin": "ast",
+      "id": "react_integration_2_setup",
+      "community": 2,
+      "norm_label": "2. setup"
+    },
+    {
+      "label": "2.1 Build the bundle",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L40",
+      "_origin": "ast",
+      "id": "react_integration_2_1_build_the_bundle",
+      "community": 2,
+      "norm_label": "2.1 build the bundle"
+    },
+    {
+      "label": "2.2 Add the files to your React app",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L49",
+      "_origin": "ast",
+      "id": "react_integration_2_2_add_the_files_to_your_react_app",
+      "community": 2,
+      "norm_label": "2.2 add the files to your react app"
+    },
+    {
+      "label": "2.3 Optional: an ESM build for direct `import`",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L65",
+      "_origin": "ast",
+      "id": "react_integration_2_3_optional_an_esm_build_for_direct_import",
+      "community": 2,
+      "norm_label": "2.3 optional: an esm build for direct `import`"
+    },
+    {
+      "label": "3. Minimal React example",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L88",
+      "_origin": "ast",
+      "id": "react_integration_3_minimal_react_example",
+      "community": 2,
+      "norm_label": "3. minimal react example"
+    },
+    {
+      "label": "Keep the edited region render-stable",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L175",
+      "_origin": "ast",
+      "id": "react_integration_keep_the_edited_region_render_stable",
+      "community": 2,
+      "norm_label": "keep the edited region render-stable"
+    },
+    {
+      "label": "4. Configuration options relevant to a React host",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L191",
+      "_origin": "ast",
+      "id": "react_integration_4_configuration_options_relevant_to_a_react_host",
+      "community": 2,
+      "norm_label": "4. configuration options relevant to a react host"
+    },
+    {
+      "label": "5. Framework-specific notes",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L219",
+      "_origin": "ast",
+      "id": "react_integration_5_framework_specific_notes",
+      "community": 2,
+      "norm_label": "5. framework-specific notes"
+    },
+    {
+      "label": "Create React App / Vite",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L221",
+      "_origin": "ast",
+      "id": "react_integration_create_react_app_vite",
+      "community": 2,
+      "norm_label": "create react app / vite"
+    },
+    {
+      "label": "Next.js (App Router or Pages Router)",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L226",
+      "_origin": "ast",
+      "id": "react_integration_next_js_app_router_or_pages_router",
+      "community": 2,
+      "norm_label": "next.js (app router or pages router)"
+    },
+    {
+      "label": "React StrictMode",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L243",
+      "_origin": "ast",
+      "id": "react_integration_react_strictmode",
+      "community": 2,
+      "norm_label": "react strictmode"
+    },
+    {
+      "label": "6. Stronger isolation: the iframe canvas pattern",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L253",
+      "_origin": "ast",
+      "id": "react_integration_6_stronger_isolation_the_iframe_canvas_pattern",
+      "community": 2,
+      "norm_label": "6. stronger isolation: the iframe canvas pattern"
+    },
+    {
+      "label": "7. Common pitfalls",
+      "file_type": "document",
+      "source_file": "react_integration.md",
+      "source_location": "L313",
+      "_origin": "ast",
+      "id": "react_integration_7_common_pitfalls",
+      "community": 2,
+      "norm_label": "7. common pitfalls"
+    },
+    {
       "label": "demo.html",
       "file_type": "code",
       "source_file": "demo/demo.html",
       "community": 9,
       "norm_label": "demo.html",
       "community_name": "iframe-embed-example.html",
-      "id": "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo"
+      "id": "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo_demo"
     },
     {
       "label": "iframe-embed-example.html",
@@ -2878,7 +3168,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L43",
+      "source_location": "L46",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_core_config_createconfig",
@@ -2888,7 +3178,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/core/constants.js",
-      "source_location": "L9",
+      "source_location": "L13",
       "weight": 1.0,
       "source": "src_core_constants",
       "target": "src_core_constants_cls",
@@ -2997,6 +3287,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog",
+      "target": "src_core_constants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/context-menu.js",
       "source_location": "L1",
       "weight": 1.0,
@@ -3030,6 +3331,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_core_constants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/elements-palette.js",
       "source_location": "L1",
       "weight": 1.0,
@@ -3045,6 +3357,17 @@
       "source_location": "L1",
       "weight": 1.0,
       "source": "src_ui_image_panel",
+      "target": "src_core_constants",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_ui_launcher",
       "target": "src_core_constants",
       "confidence_score": 1.0
     },
@@ -3151,6 +3474,28 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog",
+      "target": "src_core_constants_cls",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L23",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog_confirmdialog",
+      "target": "src_core_constants_cls"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/context-menu.js",
       "source_location": "L1",
       "weight": 1.0,
@@ -3217,6 +3562,28 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_core_constants_cls",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal_openeditormodal",
+      "target": "src_core_constants_cls"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/elements-palette.js",
       "source_location": "L1",
       "weight": 1.0,
@@ -3230,7 +3597,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/elements-palette.js",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "src_ui_elements_palette_createelementspalette",
       "target": "src_core_constants_cls"
@@ -3255,6 +3622,28 @@
       "source_location": "L21",
       "weight": 1.0,
       "source": "src_ui_image_panel_createimagepanel",
+      "target": "src_core_constants_cls"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "src_ui_launcher",
+      "target": "src_core_constants_cls",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "src_ui_launcher_createlauncher",
       "target": "src_core_constants_cls"
     },
     {
@@ -3424,7 +3813,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/core/editor-state.js",
-      "source_location": "L25",
+      "source_location": "L29",
       "weight": 1.0,
       "source": "src_core_editor_state",
       "target": "src_core_editor_state_notify",
@@ -3434,7 +3823,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/core/editor-state.js",
-      "source_location": "L20",
+      "source_location": "L24",
       "weight": 1.0,
       "source": "src_core_editor_state",
       "target": "src_core_editor_state_subscribe",
@@ -3467,9 +3856,20 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "src_index",
+      "target": "src_core_editor_state",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/save/save-client.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_save_save_client",
       "target": "src_core_editor_state",
       "confidence_score": 1.0
     },
@@ -3566,7 +3966,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L44",
+      "source_location": "L47",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_core_editor_state_createeditorstate",
@@ -3599,7 +3999,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L19",
+      "source_location": "L21",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_core_editor_state_subscribe",
@@ -3610,7 +4010,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L99",
+      "source_location": "L115",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_core_editor_state_subscribe",
@@ -3699,7 +4099,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/main-toolbar.js",
-      "source_location": "L33",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "src_ui_main_toolbar_createmaintoolbar",
       "target": "src_core_editor_state_subscribe"
@@ -3824,6 +4224,28 @@
       "source": "src_dom_mode_controller",
       "target": "src_core_editor_state_notify",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/save/save-client.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_save_save_client",
+      "target": "src_core_editor_state_notify",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/save/save-client.js",
+      "source_location": "L45",
+      "weight": 1.0,
+      "source": "src_save_save_client_savenow",
+      "target": "src_core_editor_state_notify"
     },
     {
       "relation": "contains",
@@ -4706,7 +5128,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L22",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_core_history",
@@ -5147,7 +5569,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/main-toolbar.js",
-      "source_location": "L36",
+      "source_location": "L41",
       "weight": 1.0,
       "source": "src_ui_main_toolbar_createmaintoolbar",
       "target": "src_core_history_canundo"
@@ -5180,7 +5602,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/main-toolbar.js",
-      "source_location": "L37",
+      "source_location": "L42",
       "weight": 1.0,
       "source": "src_ui_main_toolbar_createmaintoolbar",
       "target": "src_core_history_canredo"
@@ -5224,7 +5646,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/main-toolbar.js",
-      "source_location": "L18",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_ui_main_toolbar_createmaintoolbar",
       "target": "src_core_history_undo"
@@ -5268,7 +5690,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/main-toolbar.js",
-      "source_location": "L19",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_ui_main_toolbar_createmaintoolbar",
       "target": "src_core_history_redo"
@@ -6974,7 +7396,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L60",
+      "source_location": "L72",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_dom_keyboard_shortcuts_installkeyboardshortcuts",
@@ -7145,7 +7567,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L46",
+      "source_location": "L49",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_dom_mode_controller_createmodecontroller",
@@ -7241,7 +7663,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L51",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_dom_move_controller_createmovecontroller",
@@ -7360,7 +7782,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L48",
+      "source_location": "L51",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_dom_resize_controller_createresizecontroller",
@@ -7888,6 +8310,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_dom_text_editor",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/save/save-client.js",
       "source_location": "L2",
       "weight": 1.0,
@@ -7921,6 +8354,28 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_dom_text_editor_iseditingtext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L200",
+      "weight": 1.0,
+      "source": "src_index_isdirty",
+      "target": "src_dom_text_editor_iseditingtext",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/save/save-client.js",
       "source_location": "L2",
       "weight": 1.0,
@@ -7934,7 +8389,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/save/save-client.js",
-      "source_location": "L10",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "src_save_save_client_savenow",
       "target": "src_dom_text_editor_commitactiveedit"
@@ -7956,7 +8411,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/main-toolbar.js",
-      "source_location": "L18",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_ui_main_toolbar_createmaintoolbar",
       "target": "src_dom_text_editor_commitactiveedit"
@@ -7995,7 +8450,7 @@
       "relation": "indirect_call",
       "confidence": "INFERRED",
       "source_file": "src/index.js",
-      "source_location": "L180",
+      "source_location": "L260",
       "weight": 1.0,
       "context": "argument",
       "source": "src_index",
@@ -8006,7 +8461,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L26",
+      "source_location": "L29",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_index_ensureeditorroot",
@@ -8016,7 +8471,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L162",
+      "source_location": "L190",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_index_getinstance",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L186",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_index_getstate",
@@ -8026,10 +8491,40 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L37",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_index_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L197",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_index_isdirty",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L220",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_index_mountlauncher",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L209",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_index_openeditor",
       "confidence_score": 1.0
     },
     {
@@ -8037,7 +8532,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_save_save_client",
@@ -8048,7 +8543,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L20",
+      "source_location": "L22",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_save_save_client_savenow",
@@ -8059,7 +8554,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_serialize_html_serializer",
@@ -8070,7 +8565,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_serialize_html_serializer_getcleanhtml",
@@ -8147,7 +8642,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_ui_dom_helpers",
@@ -8158,10 +8653,32 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L18",
+      "source_location": "L20",
       "weight": 1.0,
       "source": "src_index",
       "target": "src_ui_dom_helpers_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_ui_editor_modal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_ui_editor_modal_openeditormodal",
       "confidence_score": 1.0
     },
     {
@@ -8206,6 +8723,28 @@
       "weight": 1.0,
       "source": "src_index",
       "target": "src_ui_image_panel_createimagepanel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_ui_launcher",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L18",
+      "weight": 1.0,
+      "source": "src_index",
+      "target": "src_ui_launcher_createlauncher",
       "confidence_score": 1.0
     },
     {
@@ -8323,7 +8862,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L42",
+      "source_location": "L45",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_index_ensureeditorroot",
@@ -8334,7 +8873,29 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L175",
+      "source_location": "L222",
+      "weight": 1.0,
+      "source": "src_index_mountlauncher",
+      "target": "src_index_ensureeditorroot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L210",
+      "weight": 1.0,
+      "source": "src_index_openeditor",
+      "target": "src_index_ensureeditorroot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L243",
       "weight": 1.0,
       "source": "src_index_autoinit",
       "target": "src_index_init",
@@ -8345,65 +8906,10 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L59",
+      "source_location": "L151",
       "weight": 1.0,
       "source": "src_index_init",
-      "target": "src_save_save_client_savenow",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/index.js",
-      "source_location": "L148",
-      "weight": 1.0,
-      "source": "src_index_init",
-      "target": "src_serialize_html_serializer_getcleanhtml",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/index.js",
-      "source_location": "L67",
-      "weight": 1.0,
-      "source": "src_index_init",
-      "target": "src_ui_breadcrumb_bar_createbreadcrumbbar",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/index.js",
-      "source_location": "L54",
-      "weight": 1.0,
-      "source": "src_index_init",
-      "target": "src_ui_context_menu_createcontextmenu",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/index.js",
-      "source_location": "L64",
-      "weight": 1.0,
-      "source": "src_index_init",
-      "target": "src_ui_css_panel_createcsspanel",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/index.js",
-      "source_location": "L84",
-      "weight": 1.0,
-      "source": "src_index_init",
-      "target": "src_ui_dom_helpers_button",
+      "target": "src_index_isdirty",
       "confidence_score": 1.0
     },
     {
@@ -8414,6 +8920,72 @@
       "source_location": "L68",
       "weight": 1.0,
       "source": "src_index_init",
+      "target": "src_save_save_client_savenow",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L172",
+      "weight": 1.0,
+      "source": "src_index_init",
+      "target": "src_serialize_html_serializer_getcleanhtml",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L83",
+      "weight": 1.0,
+      "source": "src_index_init",
+      "target": "src_ui_breadcrumb_bar_createbreadcrumbbar",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L57",
+      "weight": 1.0,
+      "source": "src_index_init",
+      "target": "src_ui_context_menu_createcontextmenu",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L80",
+      "weight": 1.0,
+      "source": "src_index_init",
+      "target": "src_ui_css_panel_createcsspanel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L100",
+      "weight": 1.0,
+      "source": "src_index_init",
+      "target": "src_ui_dom_helpers_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L84",
+      "weight": 1.0,
+      "source": "src_index_init",
       "target": "src_ui_elements_palette_createelementspalette",
       "confidence_score": 1.0
     },
@@ -8422,7 +8994,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L66",
+      "source_location": "L82",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_ui_image_panel_createimagepanel",
@@ -8433,7 +9005,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L61",
+      "source_location": "L73",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_ui_main_toolbar_createmaintoolbar",
@@ -8444,7 +9016,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L65",
+      "source_location": "L81",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_ui_quick_style_panel_createquickstylepanel",
@@ -8455,7 +9027,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L63",
+      "source_location": "L79",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_ui_style_panel_createstylepanel",
@@ -8466,7 +9038,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L56",
+      "source_location": "L59",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_ui_toast_createtoasthost",
@@ -8477,17 +9049,61 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/index.js",
-      "source_location": "L62",
+      "source_location": "L78",
       "weight": 1.0,
       "source": "src_index_init",
       "target": "src_ui_toolbar_createtoolbar",
       "confidence_score": 1.0
     },
     {
+      "relation": "indirect_call",
+      "context": "collection",
+      "confidence": "INFERRED",
+      "source_file": "src/index.js",
+      "source_location": "L222",
+      "weight": 1.0,
+      "source": "src_index_mountlauncher",
+      "target": "src_index_openeditor",
+      "confidence_score": 0.5
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L214",
+      "weight": 1.0,
+      "source": "src_index_openeditor",
+      "target": "src_ui_editor_modal_openeditormodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L254",
+      "weight": 1.0,
+      "source": "src_index_autoinit",
+      "target": "src_index_mountlauncher",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "src/index.js",
+      "source_location": "L222",
+      "weight": 1.0,
+      "source": "src_index_mountlauncher",
+      "target": "src_ui_launcher_createlauncher",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/save/save-client.js",
-      "source_location": "L9",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_save_save_client",
       "target": "src_save_save_client_savenow",
@@ -8521,7 +9137,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/save/save-client.js",
-      "source_location": "L12",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_save_save_client_savenow",
       "target": "src_serialize_html_serializer_getcleanhtml"
@@ -8598,6 +9214,93 @@
       "weight": 1.0,
       "source": "src_ui_breadcrumb_bar_createbreadcrumbbar",
       "target": "src_ui_dom_helpers_createel"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog",
+      "target": "src_ui_confirm_dialog_confirmdialog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog",
+      "target": "src_ui_dom_helpers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog",
+      "target": "src_ui_dom_helpers_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog",
+      "target": "src_ui_dom_helpers_createel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_confirm_dialog",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L35",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog_confirmdialog",
+      "target": "src_ui_dom_helpers_button"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/confirm-dialog.js",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "src_ui_confirm_dialog_confirmdialog",
+      "target": "src_ui_dom_helpers_createel"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L4",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_confirm_dialog_confirmdialog",
+      "confidence_score": 1.0
     },
     {
       "relation": "contains",
@@ -8761,6 +9464,17 @@
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_dom_helpers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/elements-palette.js",
       "source_location": "L2",
       "weight": 1.0,
@@ -8776,6 +9490,17 @@
       "source_location": "L3",
       "weight": 1.0,
       "source": "src_ui_image_panel",
+      "target": "src_ui_dom_helpers",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_launcher",
       "target": "src_ui_dom_helpers",
       "confidence_score": 1.0
     },
@@ -8849,6 +9574,28 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_dom_helpers_createel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L26",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal_openeditormodal",
+      "target": "src_ui_dom_helpers_createel"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/elements-palette.js",
       "source_location": "L2",
       "weight": 1.0,
@@ -8862,7 +9609,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/elements-palette.js",
-      "source_location": "L34",
+      "source_location": "L35",
       "weight": 1.0,
       "source": "src_ui_elements_palette_createelementspalette",
       "target": "src_ui_dom_helpers_createel"
@@ -8887,6 +9634,28 @@
       "source_location": "L20",
       "weight": 1.0,
       "source": "src_ui_image_panel_createimagepanel",
+      "target": "src_ui_dom_helpers_createel"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_launcher",
+      "target": "src_ui_dom_helpers_createel",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L13",
+      "weight": 1.0,
+      "source": "src_ui_launcher_createlauncher",
       "target": "src_ui_dom_helpers_createel"
     },
     {
@@ -9003,6 +9772,28 @@
       "relation": "imports",
       "context": "import",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L2",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_dom_helpers_button",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal_openeditormodal",
+      "target": "src_ui_dom_helpers_button"
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/main-toolbar.js",
       "source_location": "L3",
       "weight": 1.0,
@@ -9016,7 +9807,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/ui/main-toolbar.js",
-      "source_location": "L15",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "src_ui_main_toolbar_createmaintoolbar",
       "target": "src_ui_dom_helpers_button"
@@ -9086,6 +9877,49 @@
       "source": "src_ui_toolbar",
       "target": "src_ui_dom_helpers_positionnear",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L20",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_editor_modal_openeditormodal",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_icons",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal",
+      "target": "src_ui_icons_svg",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/editor-modal.js",
+      "source_location": "L47",
+      "weight": 1.0,
+      "source": "src_ui_editor_modal_openeditormodal",
+      "target": "src_ui_icons_svg"
     },
     {
       "relation": "contains",
@@ -9163,6 +9997,59 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "src/ui/icons.js",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "src_ui_icons",
+      "target": "src_ui_icons_icons",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/icons.js",
+      "source_location": "L27",
+      "weight": 1.0,
+      "source": "src_ui_icons",
+      "target": "src_ui_icons_svg",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_ui_launcher",
+      "target": "src_ui_icons",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L3",
+      "weight": 1.0,
+      "source": "src_ui_launcher",
+      "target": "src_ui_icons_svg",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "src_ui_launcher_createlauncher",
+      "target": "src_ui_icons_svg"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "src/ui/image-panel.js",
       "source_location": "L16",
       "weight": 1.0,
@@ -9189,6 +10076,16 @@
       "weight": 1.0,
       "source": "src_ui_image_panel_createimagepanel",
       "target": "src_ui_image_panel_readfileasdataurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/ui/launcher.js",
+      "source_location": "L10",
+      "weight": 1.0,
+      "source": "src_ui_launcher",
+      "target": "src_ui_launcher_createlauncher",
       "confidence_score": 1.0
     },
     {
@@ -9622,11 +10519,161 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "react_integration",
+      "target": "react_integration_integrating_etchr_into_a_react_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L12",
+      "weight": 1.0,
+      "source": "react_integration_integrating_etchr_into_a_react_app",
+      "target": "react_integration_1_the_golden_rule_etchr_edits_content_not_your_react_components",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L38",
+      "weight": 1.0,
+      "source": "react_integration_integrating_etchr_into_a_react_app",
+      "target": "react_integration_2_setup",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L88",
+      "weight": 1.0,
+      "source": "react_integration_integrating_etchr_into_a_react_app",
+      "target": "react_integration_3_minimal_react_example",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L191",
+      "weight": 1.0,
+      "source": "react_integration_integrating_etchr_into_a_react_app",
+      "target": "react_integration_4_configuration_options_relevant_to_a_react_host",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L219",
+      "weight": 1.0,
+      "source": "react_integration_integrating_etchr_into_a_react_app",
+      "target": "react_integration_5_framework_specific_notes",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L253",
+      "weight": 1.0,
+      "source": "react_integration_integrating_etchr_into_a_react_app",
+      "target": "react_integration_6_stronger_isolation_the_iframe_canvas_pattern",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L313",
+      "weight": 1.0,
+      "source": "react_integration_integrating_etchr_into_a_react_app",
+      "target": "react_integration_7_common_pitfalls",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L40",
+      "weight": 1.0,
+      "source": "react_integration_2_setup",
+      "target": "react_integration_2_1_build_the_bundle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L49",
+      "weight": 1.0,
+      "source": "react_integration_2_setup",
+      "target": "react_integration_2_2_add_the_files_to_your_react_app",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L65",
+      "weight": 1.0,
+      "source": "react_integration_2_setup",
+      "target": "react_integration_2_3_optional_an_esm_build_for_direct_import",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L175",
+      "weight": 1.0,
+      "source": "react_integration_3_minimal_react_example",
+      "target": "react_integration_keep_the_edited_region_render_stable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L221",
+      "weight": 1.0,
+      "source": "react_integration_5_framework_specific_notes",
+      "target": "react_integration_create_react_app_vite",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L226",
+      "weight": 1.0,
+      "source": "react_integration_5_framework_specific_notes",
+      "target": "react_integration_next_js_app_router_or_pages_router",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "react_integration.md",
+      "source_location": "L243",
+      "weight": 1.0,
+      "source": "react_integration_5_framework_specific_notes",
+      "target": "react_integration_react_strictmode",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "demo/demo.html",
-      "source": "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo",
+      "source": "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo_demo",
       "target": "dist_editor_css"
     },
     {
@@ -9657,12 +10704,12 @@
       "nodes": [
         "src_serialize_html_serializer",
         "server_save_page",
-        "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo"
+        "demo_demo_demo_demo_demo_demo_demo_demo_demo_demo_demo"
       ],
       "relation": "participate_in",
       "confidence": "INFERRED",
       "confidence_score": 0.8
     }
   ],
-  "built_at_commit": "5ae68479ff860b2453f0c57bd48c7de245c18a6e"
+  "built_at_commit": "59d2e714affdf0c6bdcfe965cebc2d0ae2fbda4c"
 }

@@ -1,40 +1,66 @@
+/* ==========================================================================
+   Etchr editor chrome — Neo-Brutalist theme
+   Tokens live on #vve-root: the `all: initial` reset does NOT touch custom
+   properties, so every editor element (all descendants of #vve-root) inherits
+   them while the host page stays unpolluted.
+   ========================================================================== */
+
+/* ---- §1 Tokens + root reset ---- */
 #vve-root {
   all: initial;
   display: block;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --vve-ink: #111111;
+  --vve-paper: #fffdf6;
+  --vve-sun: #ffd400;
+  --vve-tangerine: #ff7a00;
+  --vve-danger: #ff3b3b;
+  --vve-success: #7ed957;
+  --vve-select: #2f6fed;
+  --vve-ink-soft: #4a4a44;
+  --vve-border: 2px solid var(--vve-ink);
+  --vve-border-thick: 3px solid var(--vve-ink);
+  --vve-shadow: 4px 4px 0 var(--vve-ink);
+  --vve-shadow-sm: 3px 3px 0 var(--vve-ink);
+  --vve-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--vve-font);
   font-size: 14px;
-  color: #1a1a1a;
+  color: var(--vve-ink);
 }
 
 #vve-root * {
   box-sizing: border-box;
 }
 
+#vve-root :focus-visible {
+  outline: 3px solid var(--vve-select);
+  outline-offset: 2px;
+}
+
+/* ---- §2 Selection / hover overlays + resize handles ---- */
 .vve-outline-hover,
 .vve-outline-selected {
   position: fixed;
   pointer-events: none;
   z-index: 2147483000;
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 .vve-outline-hover {
-  outline: 1px dashed #4c9ffe;
-  background: rgba(76, 159, 254, 0.08);
+  outline: 2px dashed var(--vve-ink);
+  background: rgba(255, 212, 0, 0.1);
 }
 
 .vve-outline-selected {
-  outline: 2px solid #2f6fed;
-  box-shadow: 0 0 0 1px rgba(47, 111, 237, 0.3);
+  outline: 3px solid var(--vve-select);
 }
 
 .vve-resize-handle {
   position: fixed;
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
   background: #fff;
-  border: 1px solid #2f6fed;
-  border-radius: 2px;
+  border: 2px solid var(--vve-ink);
+  border-radius: 0;
   box-sizing: border-box;
   z-index: 2147483001;
   pointer-events: auto;
@@ -70,16 +96,16 @@
   background: transparent;
 }
 
-/* ---- Right-click layering menu ---- */
+/* ---- §3 Right-click layering menu ---- */
 .vve-context-menu {
   position: fixed;
   z-index: 2147483004;
   min-width: 168px;
-  background: #232936;
-  border: 1px solid #333c4d;
-  border-radius: 8px;
+  background: var(--vve-paper);
+  border: var(--vve-border-thick);
+  border-radius: 0;
   padding: 4px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--vve-shadow);
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -87,98 +113,131 @@
 
 .vve-context-menu-item {
   appearance: none;
-  border: none;
+  border: 2px solid transparent;
   background: transparent;
-  color: #e8ecf3;
+  color: var(--vve-ink);
   text-align: left;
   padding: 7px 12px;
-  border-radius: 5px;
+  border-radius: 0;
   font-size: 13px;
+  font-weight: 600;
   line-height: 1.2;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .vve-context-menu-item:hover {
-  background: #2f6fed;
+  background: var(--vve-sun);
+  border-color: var(--vve-ink);
 }
 
+/* ---- §4 Toolbars ---- */
 .vve-main-toolbar {
   position: fixed;
   top: 12px;
   right: 12px;
   z-index: 2147483003;
   display: flex;
-  gap: 6px;
-  background: #1f2430;
-  padding: 6px;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  gap: 8px;
+  background: var(--vve-paper);
+  padding: 8px;
+  border: var(--vve-border-thick);
+  border-radius: 4px;
+  box-shadow: var(--vve-shadow);
   transition: right 0.18s ease;
 }
 
-/* When the elements palette is open, slide the main toolbar left of it. */
+/* When the right-docked elements palette is open, slide the toolbar clear. */
 .vve-palette-open .vve-main-toolbar {
-  right: 272px;
+  right: 276px;
 }
 
 .vve-toolbar {
   position: fixed;
   z-index: 2147483001;
   display: flex;
-  gap: 4px;
-  background: #1f2430;
-  padding: 4px;
-  border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  gap: 6px;
+  background: var(--vve-paper);
+  padding: 6px;
+  border: var(--vve-border-thick);
+  border-radius: 4px;
+  box-shadow: var(--vve-shadow);
 }
 
+/* ---- §5 Buttons (shared recipe) ---- */
 .vve-btn {
   appearance: none;
-  border: none;
-  background: #2f3646;
-  color: #fff;
-  padding: 6px 10px;
+  border: var(--vve-border);
+  background: var(--vve-paper);
+  color: var(--vve-ink);
+  padding: 7px 12px;
   border-radius: 4px;
-  font-size: 13px;
+  font-family: var(--vve-font);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   cursor: pointer;
   line-height: 1.2;
   white-space: nowrap;
+  box-shadow: var(--vve-shadow-sm);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 .vve-btn:hover {
-  background: #3c4558;
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--vve-ink);
+}
+
+.vve-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .vve-btn-active {
-  background: #2f6fed;
+  background: var(--vve-sun);
+}
+
+.vve-btn-primary {
+  background: var(--vve-sun);
 }
 
 .vve-btn:disabled {
-  opacity: 0.4;
+  opacity: 0.45;
   cursor: default;
+  transform: none;
+  box-shadow: var(--vve-shadow-sm);
 }
 
 .vve-btn:disabled:hover {
-  background: #2f3646;
+  transform: none;
+  box-shadow: var(--vve-shadow-sm);
 }
 
 .vve-btn-danger {
-  background: #d64545;
+  background: var(--vve-danger);
+  color: #fff;
 }
 
 .vve-btn-danger:hover {
-  background: #e35b5b;
+  background: var(--vve-danger);
 }
 
+/* Host Save button while there are unsaved changes. */
+.vve-btn-attention {
+  background: var(--vve-tangerine);
+}
+
+/* ---- §6 Panels (style / css / quick / image share this chrome) ---- */
 .vve-panel {
   position: fixed;
   z-index: 2147483001;
   width: 240px;
-  background: #232936;
-  color: #e8ecf3;
-  border-radius: 8px;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+  background: var(--vve-paper);
+  color: var(--vve-ink);
+  border: var(--vve-border-thick);
+  border-radius: 4px;
+  box-shadow: var(--vve-shadow);
   overflow: hidden;
 }
 
@@ -187,25 +246,39 @@
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  font-weight: 600;
-  font-size: 13px;
-  background: #1b202b;
-  border-bottom: 1px solid #333c4d;
+  font-weight: 800;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: var(--vve-sun);
+  border-bottom: var(--vve-border-thick);
 }
 
 .vve-panel-close {
   appearance: none;
-  border: none;
-  background: transparent;
-  color: #9aa4b5;
-  font-size: 18px;
+  border: var(--vve-border);
+  background: var(--vve-paper);
+  color: var(--vve-ink);
+  width: 24px;
+  height: 24px;
+  font-size: 15px;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 var(--vve-ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 .vve-panel-close:hover {
+  background: var(--vve-danger);
   color: #fff;
+}
+
+.vve-panel-close:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .vve-panel-body {
@@ -226,18 +299,20 @@
 }
 
 .vve-field-label {
-  color: #9aa4b5;
+  color: var(--vve-ink-soft);
+  font-weight: 600;
   flex: 0 0 84px;
 }
 
 .vve-control {
   flex: 1 1 auto;
   min-width: 0;
-  background: #2f3646;
-  color: #fff;
-  border: 1px solid #3c4558;
-  border-radius: 4px;
+  background: #fff;
+  color: var(--vve-ink);
+  border: var(--vve-border);
+  border-radius: 0;
   padding: 4px 6px;
+  font-family: var(--vve-font);
   font-size: 12px;
 }
 
@@ -247,53 +322,85 @@
   cursor: pointer;
 }
 
-/* ---- Right-side collapsible elements palette ---- */
+/* ---- §7 Collapsible elements palette (left/right dock variants) ---- */
 .vve-palette {
   position: fixed;
   top: 0;
-  right: 0;
   height: 100vh;
   width: 260px;
   z-index: 2147483002;
-  background: #1f2430;
-  box-shadow: -4px 0 20px rgba(0, 0, 0, 0.28);
+  background: var(--vve-paper);
   transition: transform 0.18s ease;
   display: flex;
 }
 
-.vve-palette-collapsed {
+.vve-palette-right {
+  right: 0;
+  border-left: var(--vve-border-thick);
+}
+
+.vve-palette-right.vve-palette-collapsed {
   transform: translateX(260px);
+}
+
+.vve-palette-left {
+  left: 0;
+  border-right: var(--vve-border-thick);
+}
+
+.vve-palette-left.vve-palette-collapsed {
+  transform: translateX(-260px);
 }
 
 .vve-palette-tab {
   position: absolute;
-  left: -34px;
   top: 96px;
-  width: 34px;
-  height: 110px;
+  width: 38px;
+  height: 116px;
   writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  background: #2f6fed;
-  color: #fff;
-  border: none;
-  border-radius: 8px 0 0 8px;
-  font-size: 13px;
-  letter-spacing: 0.04em;
+  background: var(--vve-tangerine);
+  color: var(--vve-ink);
+  border: var(--vve-border-thick);
+  font-family: var(--vve-font);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  box-shadow: -3px 0 12px rgba(0, 0, 0, 0.25);
+}
+
+.vve-palette-tab:hover {
+  background: var(--vve-sun);
+}
+
+.vve-palette-right .vve-palette-tab {
+  left: -38px;
+  transform: rotate(180deg);
+  border-radius: 0 6px 6px 0; /* rotated 180°: renders as rounded outer edge */
+  border-left: none;
+}
+
+.vve-palette-left .vve-palette-tab {
+  right: -38px;
+  border-radius: 0 6px 6px 0;
+  border-left: none;
 }
 
 .vve-palette-inner {
   flex: 1 1 auto;
   overflow-y: auto;
   padding: 16px 14px;
-  color: #e8ecf3;
+  color: var(--vve-ink);
 }
 
 .vve-palette-title {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: var(--vve-border-thick);
 }
 
 .vve-palette-section {
@@ -302,42 +409,57 @@
 
 .vve-palette-section-title {
   font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #8a93a6;
-  margin-bottom: 6px;
+  letter-spacing: 0.08em;
+  color: var(--vve-ink);
+  background: var(--vve-sun);
+  border: var(--vve-border);
+  display: inline-block;
+  padding: 2px 8px;
+  margin-bottom: 8px;
 }
 
 .vve-palette-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
+  gap: 8px;
 }
 
 .vve-palette-item {
   appearance: none;
-  border: 1px solid #333c4d;
-  background: #2a3140;
-  color: #e8ecf3;
-  border-radius: 6px;
+  border: var(--vve-border);
+  background: #fff;
+  color: var(--vve-ink);
+  border-radius: 0;
   padding: 9px 8px;
+  font-family: var(--vve-font);
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   text-align: left;
+  box-shadow: 2px 2px 0 var(--vve-ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 .vve-palette-item:hover {
-  background: #2f6fed;
-  border-color: #2f6fed;
+  background: var(--vve-sun);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--vve-ink);
 }
 
-/* ---- Image panel extras ---- */
+.vve-palette-item:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* ---- §8 Image panel extras ---- */
 .vve-image-panel {
   width: 268px;
 }
 
 .vve-panel-group {
-  border-top: 1px solid #333c4d;
+  border-top: 2px dashed var(--vve-ink);
   padding-top: 10px;
   margin-top: 4px;
 }
@@ -349,9 +471,10 @@
 
 .vve-panel-group-title {
   font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #8a93a6;
+  letter-spacing: 0.08em;
+  color: var(--vve-ink-soft);
   margin-bottom: 8px;
 }
 
@@ -387,7 +510,7 @@
   font-size: 12px;
 }
 
-/* ---- CSS rule editor panel ---- */
+/* ---- §9 CSS rule editor panel ---- */
 .vve-css-panel {
   width: 320px;
 }
@@ -404,18 +527,20 @@
 
 .vve-css-section-title {
   font-size: 11px;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #8a93a6;
+  letter-spacing: 0.08em;
+  color: var(--vve-ink-soft);
   margin: 10px 0 6px;
 }
 
 .vve-css-rule {
-  border: 1px solid #333c4d;
-  border-radius: 6px;
+  border: var(--vve-border);
+  border-radius: 0;
   padding: 8px;
   margin-bottom: 8px;
-  background: #1b202b;
+  background: #fff;
+  box-shadow: 2px 2px 0 var(--vve-ink);
 }
 
 .vve-css-rule-head {
@@ -428,22 +553,26 @@
 
 .vve-css-cond {
   font-size: 11px;
-  color: #d6a24c;
+  font-weight: 700;
+  color: var(--vve-tangerine);
   width: 100%;
 }
 
 .vve-css-selector {
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 12px;
-  color: #7fd1ff;
+  font-weight: 700;
+  color: var(--vve-select);
   word-break: break-all;
 }
 
 .vve-css-spec {
   margin-left: auto;
   font-size: 10px;
-  color: #8a93a6;
-  background: #2a3140;
+  font-weight: 700;
+  color: var(--vve-ink);
+  background: var(--vve-sun);
+  border: 1px solid var(--vve-ink);
   border-radius: 10px;
   padding: 1px 7px;
 }
@@ -459,7 +588,7 @@
   flex: 0 0 108px;
   font-family: 'SFMono-Regular', Consolas, monospace;
   font-size: 11px;
-  color: #9aa4b5;
+  color: var(--vve-ink-soft);
   word-break: break-all;
 }
 
@@ -482,16 +611,17 @@
 
 .vve-css-empty {
   font-size: 12px;
-  color: #8a93a6;
+  color: var(--vve-ink-soft);
   padding: 4px 0;
 }
 
 .vve-css-note {
   margin-top: 10px;
   font-size: 11px;
-  color: #d6a24c;
-  background: rgba(214, 162, 76, 0.1);
-  border-radius: 6px;
+  color: var(--vve-ink);
+  background: rgba(255, 212, 0, 0.25);
+  border: 2px dashed var(--vve-ink);
+  border-radius: 0;
   padding: 8px;
   line-height: 1.4;
 }
@@ -501,8 +631,9 @@
   appearance: none;
   border: none;
   background: transparent;
-  color: #8a93a6;
+  color: var(--vve-ink-soft);
   font-size: 15px;
+  font-weight: 700;
   line-height: 1;
   cursor: pointer;
   padding: 0 4px;
@@ -511,10 +642,10 @@
 
 .vve-css-prop-remove:hover,
 .vve-applied-remove:hover {
-  color: #e35b5b;
+  color: var(--vve-danger);
 }
 
-/* ---- Quick style (describe + suggestions) panel ---- */
+/* ---- §10 Quick style (describe + suggestions) panel ---- */
 .vve-quick-panel {
   width: 300px;
 }
@@ -533,7 +664,7 @@
 
 .vve-nl-hint {
   font-size: 11px;
-  color: #8a93a6;
+  color: var(--vve-ink-soft);
   margin-top: 8px;
   line-height: 1.4;
   min-height: 14px;
@@ -545,20 +676,31 @@
   gap: 6px;
 }
 
+/* Pill radius kept as a deliberate accent against the square everything-else. */
 .vve-sug-chip {
   appearance: none;
-  border: 1px solid #333c4d;
-  background: #2a3140;
-  color: #e8ecf3;
+  border: var(--vve-border);
+  background: #fff;
+  color: var(--vve-ink);
   border-radius: 999px;
   padding: 6px 12px;
+  font-family: var(--vve-font);
   font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 2px 2px 0 var(--vve-ink);
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
 }
 
 .vve-sug-chip:hover {
-  background: #2f6fed;
-  border-color: #2f6fed;
+  background: var(--vve-sun);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--vve-ink);
+}
+
+.vve-sug-chip:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
 }
 
 .vve-applied-list {
@@ -577,17 +719,17 @@
 
 .vve-applied-name {
   flex: 0 0 104px;
-  color: #9aa4b5;
+  color: var(--vve-ink-soft);
   word-break: break-all;
 }
 
 .vve-applied-value {
   flex: 1 1 auto;
-  color: #cfd6e2;
+  color: var(--vve-ink);
   word-break: break-all;
 }
 
-/* ---- Toasts ---- */
+/* ---- §11 Toasts ---- */
 .vve-toast-host {
   position: fixed;
   bottom: 20px;
@@ -605,10 +747,12 @@
   pointer-events: auto;
   cursor: pointer;
   padding: 10px 18px;
-  border-radius: 8px;
+  border: var(--vve-border-thick);
+  border-radius: 4px;
   font-size: 13px;
-  color: #fff;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  font-weight: 700;
+  color: var(--vve-ink);
+  box-shadow: var(--vve-shadow);
   opacity: 0;
   transform: translateY(8px);
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -621,18 +765,19 @@
 }
 
 .vve-toast-success {
-  background: #1f7a3f;
+  background: var(--vve-success);
 }
 
 .vve-toast-error {
-  background: #b3261e;
+  background: var(--vve-danger);
+  color: #fff;
 }
 
 .vve-toast-info {
-  background: #2f3646;
+  background: var(--vve-paper);
 }
 
-/* ---- Breadcrumb bar ---- */
+/* ---- §12 Breadcrumb bar ---- */
 .vve-breadcrumb {
   position: fixed;
   bottom: 12px;
@@ -641,10 +786,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: #1f2430;
+  background: var(--vve-paper);
   padding: 6px 10px;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border: var(--vve-border-thick);
+  border-radius: 4px;
+  box-shadow: var(--vve-shadow);
   max-width: calc(100vw - 24px);
   overflow-x: auto;
 }
@@ -653,26 +799,236 @@
   appearance: none;
   border: none;
   background: transparent;
-  color: #9aa4b5;
+  color: var(--vve-ink-soft);
   font-size: 12px;
   font-family: 'SFMono-Regular', Consolas, monospace;
   padding: 3px 6px;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: pointer;
   white-space: nowrap;
 }
 
 .vve-crumb:hover {
-  background: #2f3646;
-  color: #fff;
+  background: var(--vve-sun);
+  color: var(--vve-ink);
 }
 
 .vve-crumb-current {
-  color: #7fd1ff;
-  font-weight: 600;
+  color: var(--vve-ink);
+  background: var(--vve-sun);
+  font-weight: 700;
 }
 
 .vve-crumb-sep {
-  color: #4b5563;
+  color: var(--vve-ink-soft);
   font-size: 12px;
+}
+
+/* ---- §13 Launcher (host page pencil button) ---- */
+.vve-launcher {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2147483003;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--vve-tangerine), var(--vve-sun));
+  border: var(--vve-border-thick);
+  box-shadow: var(--vve-shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.08s ease, box-shadow 0.08s ease;
+}
+
+.vve-launcher:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--vve-ink);
+}
+
+.vve-launcher:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.vve-launcher:disabled {
+  opacity: 0.5;
+  cursor: default;
+  transform: none;
+  box-shadow: var(--vve-shadow);
+}
+
+.vve-launcher svg {
+  display: block;
+}
+
+/* ---- §14 Editor modal (host page) ---- */
+.vve-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483200;
+  background: rgba(17, 17, 17, 0.55); /* always-on fallback under the blur */
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.vve-modal {
+  position: fixed;
+  inset: 20%; /* 20% padding from every screen edge */
+  z-index: 2147483210;
+  display: flex;
+  flex-direction: column;
+  background: var(--vve-paper);
+  border: var(--vve-border-thick);
+  box-shadow: 8px 8px 0 var(--vve-ink);
+  border-radius: 4px;
+  overflow: hidden;
+  animation: vve-modal-in 0.12s ease;
+}
+
+@keyframes vve-modal-in {
+  from {
+    transform: scale(0.98);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.vve-modal-max {
+  inset: 12px;
+}
+
+@media (max-width: 768px), (max-height: 560px) {
+  .vve-modal {
+    inset: 12px;
+  }
+}
+
+.vve-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--vve-sun);
+  border-bottom: var(--vve-border-thick);
+  font-weight: 800;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  flex: 0 0 auto;
+}
+
+.vve-modal-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vve-modal-body {
+  flex: 1 1 auto;
+  position: relative;
+  background: #fff;
+}
+
+.vve-modal-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: #fff;
+}
+
+.vve-modal-iconbtn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vve-modal-iconbtn svg {
+  display: block;
+}
+
+.vve-modal-error {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vve-ink);
+  background: var(--vve-paper);
+}
+
+/* ---- §15 Confirm dialog (renders above the modal) ---- */
+.vve-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483300;
+  background: rgba(17, 17, 17, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+}
+
+.vve-confirm {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2147483310;
+  width: min(380px, calc(100vw - 32px));
+  background: var(--vve-paper);
+  border: var(--vve-border-thick);
+  box-shadow: 8px 8px 0 var(--vve-ink);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.vve-confirm-header {
+  padding: 10px 14px;
+  background: var(--vve-tangerine);
+  border-bottom: var(--vve-border-thick);
+  font-weight: 800;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.vve-confirm-message {
+  padding: 16px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.vve-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 0 14px 14px;
+}
+
+/* ---- §16 Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  #vve-root,
+  #vve-root * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

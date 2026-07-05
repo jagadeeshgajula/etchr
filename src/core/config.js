@@ -33,6 +33,14 @@ export function createConfig(overrides = {}) {
     // this can be set explicitly either way.
     confirmBeforeSave: undefined,
     startInEditMode: false,
+    // Running inside the editor-modal iframe: trims the in-page chrome (no
+    // Enable/Exit toggle, no in-page Save — the modal header owns saving).
+    embedded: false,
+    // Which screen edge the elements palette docks to: 'right' | 'left'.
+    paletteSide: 'right',
+    // Set false to remove the Enable/Exit editing toggle and the Ctrl/Cmd+E
+    // shortcut (used in embedded mode, where exiting edit mode is a dead state).
+    allowModeToggle: true,
     debounceMs: DEFAULT_DEBOUNCE_MS,
     // Resize handles on the selection outline, and whether resizing an
     // element auto-injects reflow fixes + @media breakpoint rules so layout

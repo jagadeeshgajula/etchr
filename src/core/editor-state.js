@@ -8,6 +8,10 @@ export function createEditorState({ root, editorRoot, config }) {
     hoveredElement: null,
     history: [],
     currentIndex: -1,
+    // history index at the last successful save; currentIndex !== savedIndex
+    // means there are unsaved changes (undoing back to the saved point counts
+    // as clean again).
+    savedIndex: -1,
     editableStylesheet: null,
     stylesheetCache: {
       signature: 0,

@@ -4,8 +4,8 @@
 
 It is designed for two use cases:
 
-1. **Standalone** — embed it in any static HTML page and save edits straight back to the `.html` file via a tiny Node/Express endpoint.
-2. **Embedded in an app (e.g. React)** — render AI-generated or DB-stored HTML inside a same-origin `<iframe srcdoc>`, hand editing control to Etchr, and receive the cleaned HTML back through a `Promise`-based `onSave(html)` callback so your app can persist it wherever it likes (a DB row, an API, etc.).
+1. **Standalone** — drop it on any static HTML page. By default it shows only a small pencil **launcher** button; clicking it opens the editor in a popup **modal** (the page reloaded in a same-origin iframe, running in edit mode), and saves write straight back to the `.html` file via a tiny Node/Express endpoint.
+2. **Embedded in an app (e.g. React)** — render AI-generated or DB-stored HTML inside a same-origin `<iframe srcdoc>`, hand editing control to Etchr, and receive the cleaned HTML back through a `Promise`-based `onSave(html)` callback so your app can persist it wherever it likes (a DB row, an API, etc.). See [react_integration.md](react_integration.md) for a full walkthrough.
 
 No build step is required to *use* it — just the bundled `dist/editor.js` and `dist/editor.css`.
 
@@ -13,6 +13,7 @@ No build step is required to *use* it — just the bundled `dist/editor.js` and 
 
 ## Features
 
+- **Launcher + modal editing UX** — a single gradient pencil button is the only chrome injected into the host page; clicking it opens the editor in a framed popup (blurred backdrop, Save/Maximize/Close header) running against the same page in a same-origin iframe. Closing with unsaved changes prompts a Neo-Brutalist confirm dialog instead of silently discarding edits; saving reloads the host page once so it reflects what was written.
 - **Select anything** — hover outline + click-to-select any element on the page.
 - **Drag-to-resize with 8 handles** — the moment you select an element, eight resize handles (four corners + four edge midpoints) appear on its border. Drag any handle to freely resize the element; west/north handles keep the opposite edge visually anchored using margin compensation, so elements in normal document flow resize as you'd expect. Neighboring elements reflow live as you drag, and the whole gesture is a single undo step.
 - **Drag-to-move (freeform canvas)** — drag the *interior* of a selected element (the border stays reserved for the resize handles) to move it anywhere on the page. On the first drag the element is promoted to an absolutely-positioned overlay in page coordinates — the PowerPoint-canvas model — so it lifts out of the document flow and can be placed over, or under, anything else. Frozen at its rendered size so it doesn't collapse, placement is pixel-exact regardless of page layout (see deep dive below), and the whole gesture is one undo step.
@@ -40,7 +41,7 @@ No build step is required to *use* it — just the bundled `dist/editor.js` and 
 │   ├── core/                # history engine, state, config, element-path, constants
 │   ├── dom/                 # mode controller, selection overlay, text/style/attr mutators, element factory, keyboard shortcuts
 │   ├── css/                 # rule matcher, specificity, stylesheet registry, css mutator, NL parser, suggestions
-│   ├── ui/                  # toolbars, panels (style, css, quick-style, image, palette), breadcrumb, toast
+│   ├── ui/                  # toolbars, panels (style, css, quick-style, image, palette), launcher, editor-modal, confirm-dialog, icons, breadcrumb, toast
 │   ├── serialize/           # clean-HTML serializer
 │   ├── save/                # pluggable save client
 │   └── index.js             # entry point + public API + auto-init
@@ -51,6 +52,7 @@ No build step is required to *use* it — just the bundled `dist/editor.js` and 
 ├── server/
 │   ├── server.js            # Express: static serve + POST /save-page
 │   └── save-page.js         # path-traversal-safe file writer
+├── react_integration.md     # guide for embedding Etchr in a React app
 ├── esbuild.config.mjs       # build script (JS IIFE + CSS)
 └── package.json
 ```
@@ -80,9 +82,10 @@ npm run serve
 ```
 Then open **http://localhost:5173/demo.html**.
 
-- Click **Edit** (or press `Ctrl+E`) to enter edit mode.
+- Click the pencil **launcher** button (top-right corner) to open the editor popup.
 - Hover to highlight, click to select, and use the toolbar/panels to edit.
-- Click **Save** (or `Ctrl+S`) to write your changes back to `demo/demo.html`.
+- Click **Save** in the popup header (or `Ctrl+S`) to write your changes back to `demo/demo.html`.
+- Click **Close** (or `Escape`) to dismiss the popup; if there are unsaved changes you'll be asked to confirm.
 
 > Tip: after rebuilding, hard-refresh the browser (`Ctrl+Shift+R`) to bypass the cached bundle.
 
@@ -103,6 +106,52 @@ Build once, then include the two artifacts. Etchr auto-initializes on load.
 - `data-auto-init="false"` — disable auto-init if you want to call `VisualEditor.init(...)` yourself.
 
 You'll need a server route that accepts the saved HTML. The included `server/save-page.js` shows a safe implementation (rejects path traversal, only writes `.html`/`.htm`).
+
+### Launcher vs. inline mode
+
+Auto-init reads `data-mode` off the `<script>` tag:
+
+| `data-mode` | Behavior |
+|---|---|
+| `launcher` (default) | Injects only the pencil button. Editing happens in the popup modal (see below); the host page itself is never put into edit mode. |
+| `inline` | The pre-v4 behavior — the editor runs directly on the page itself (toolbar, panels, and all), no popup. |
+| `off` | Same as `data-auto-init="false"`: nothing runs until you call `VisualEditor.init(...)` yourself. |
+
+```html
+<script src="/dist/editor.js" data-mode="inline"></script>
+```
+
+If you want a custom trigger instead of the built-in pencil button, use `data-mode="off"` and call `window.VisualEditor.openEditor()` from your own button's click handler.
+
+---
+
+## Architecture: the launcher + modal flow
+
+```mermaid
+sequenceDiagram
+    participant Host as Host page (edit mode OFF)
+    participant Launcher as Pencil launcher
+    participant Modal as Editor modal (host doc)
+    participant Iframe as Same-origin iframe (?__etchr=1)
+
+    Host->>Launcher: auto-init (data-mode="launcher")
+    Launcher-->>Host: user clicks pencil
+    Launcher->>Modal: openEditorModal()
+    Modal->>Iframe: src = pageURL + "?__etchr=1"
+    Iframe->>Iframe: auto-init detects EMBED_PARAM
+    Iframe->>Iframe: init({embedded:true, startInEditMode:true})
+    Iframe-->>Modal: bridge set on frameElement before load
+    Modal->>Iframe: on load, acquire contentWindow.VisualEditor
+    Modal->>Iframe: Save click -> instance.save()
+    Iframe-->>Modal: bridge.notifySaved() / notifyDirty()
+    Modal-->>Host: Close -> teardown()
+    Modal->>Host: location.reload() (only if a save happened)
+```
+
+- **Same origin, no `postMessage`.** The modal's iframe loads the *same page* with a `?__etchr=1` query flag (`EMBED_PARAM`, `src/core/constants.js`), so the host can call `iframe.contentWindow.VisualEditor` directly once the frame loads.
+- **The bridge is one-way iframe → host**, set as an expando (`iframe.__etchrBridge`) *before* `src` is assigned, so it's guaranteed to exist by the time the iframe's own auto-init reads `window.frameElement.__etchrBridge`. It carries three calls: `requestClose()` (Escape with nothing else to dismiss), `notifyDirty(bool)` (highlights the modal's Save button), and `notifySaved()` (tells the host a reload is warranted on close).
+- **Dirty tracking** compares `state.currentIndex` against a new `state.savedIndex` (set on every successful save) — undoing back to the last-saved point counts as clean again. An in-progress `contenteditable` session is conservatively treated as dirty even before it commits.
+- **Embedded config.** Inside the iframe, `init()` is called with `embedded: true`, `startInEditMode: true`, `paletteSide: 'left'`, `confirmBeforeSave: false` (the modal's own Save click is already a deliberate action), and `allowModeToggle: false` (there's no page to "exit editing" back to inside a popup).
 
 ---
 
@@ -140,6 +189,9 @@ Because it's same-origin, you can pass a real function reference directly to `in
 |--------|-------------|
 | `init(options)` | Initialize the editor (idempotent — returns the existing instance if already inited). Returns the instance. |
 | `getState()` | Current editor state (selection, history, edit-mode flag…). |
+| `getInstance()` | The live instance object (or `null` if not initialized) — the same value `init()` returns. |
+| `isDirty()` | `true` if there are unsaved changes (or an in-progress text edit) since the last successful save. |
+| `openEditor()` | Programmatically open the launcher's popup modal — useful with `data-mode="off"` and your own trigger button. |
 
 The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `getCleanHTML()`, `getState()`, and `destroy()`.
 
@@ -154,6 +206,9 @@ The instance returned by `init()` also exposes: `undo()`, `redo()`, `save()`, `g
 | `onAiStyle` | `(text, {tag, currentStyles}) => Promise<{property,value}[]>` | `null` | Route the "describe a style" box to your own LLM for true NL understanding. Falls back to the built-in phrase parser. |
 | `confirmBeforeSave` | `boolean` | auto | Show a native confirm before saving. Defaults to `true` only for the file-write path. |
 | `startInEditMode` | `boolean` | `false` | Enter edit mode immediately on init. |
+| `embedded` | `boolean` | `false` | Marks this instance as running inside the editor-modal iframe: trims in-page chrome (no Enable/Exit toggle, no in-page Save button — the modal header owns saving). Set automatically when auto-init detects `?__etchr=1`; you shouldn't normally set this by hand. |
+| `paletteSide` | `'right' \| 'left'` | `'right'` | Which screen edge the elements palette docks to. |
+| `allowModeToggle` | `boolean` | `true` | Set `false` to remove the Enable/Exit editing toggle and its `Ctrl+E` shortcut (used in embedded mode, where exiting edit mode is a dead state). |
 | `debounceMs` | `number` | `150` | Debounce for CSS rescans on selection change. |
 | `fontFamilies` / `googleFonts` | `string[]` | built-in lists | Customize the font pickers. |
 | `enableResize` | `boolean` | `true` | Show the 8 drag-to-resize handles on the selected element. Set `false` to disable resizing entirely. |
@@ -234,11 +289,13 @@ These are the two most recently added interactions (v3.0.0). Both build on the s
 - Resize handles target a single selected element; multi-select resizing is out of scope.
 - Drag-to-move promotes an element to `position: absolute` and reparents it to `<body>` for true page-global coordinates. Because it leaves its original container, descendant-based CSS (e.g. `.card > .title { … }`) no longer matches it — restyle via the CSS panel if you rely on such rules. Absolute placement uses fixed pixel coordinates, so moved elements are not auto-made-responsive the way resizing is.
 - Layering targets a single element and restacks it only against its own siblings (the elements it can actually overlap); moving is what brings elements into a shared stacking context.
+- The launcher + modal flow relies on the page being reachable at a stable, same-origin URL (it reloads the current page into an iframe with `?__etchr=1` appended) — it isn't used for the React/iframe-srcdoc integration path, which stays as documented above.
 
 ---
 
 ## Version history
 
+- **v4.0.0** — Launcher + modal editing UX: standalone embeds now default to a pencil-button launcher (`data-mode="launcher"`) that opens editing in a popup modal, rather than putting the whole host page into edit mode inline. Added a same-origin iframe reload flow with a host↔iframe bridge (`src/ui/editor-modal.js`), a Neo-Brutalist unsaved-changes confirm dialog (`src/ui/confirm-dialog.js`), and an inline-SVG icon set (`src/ui/icons.js`). New config: `embedded`, `paletteSide`, `allowModeToggle`; new public API: `getInstance()`, `isDirty()`, `openEditor()`; new `data-mode` script attribute (`launcher` / `inline` / `off`) replacing the old always-inline behavior (still available via `data-mode="inline"`). Added `state.savedIndex` for dirty tracking. Added [react_integration.md](react_integration.md), a dedicated guide for embedding Etchr in a React app. See [Architecture: the launcher + modal flow](#architecture-the-launcher--modal-flow) above.
 - **v3.0.0** — Freeform drag-to-move (`enableMove`) and PowerPoint-style layering with a right-click context menu (`enableLayering`): Bring to Front / Bring Forward / Send Backward / Send to Back. New `move-element` history change type; new config options `enableMove` and `enableLayering`. See [Drag-to-move & layering — implementation deep dive](#drag-to-move--layering--implementation-deep-dive) above.
 - **v2.0.0** — Drag-to-resize with 8 handles (`enableResize`) and auto-generated responsive CSS on resize (`autoResponsiveCss`, `resizeMinSize`, `responsiveBreakpoints`).
 - **v1.0.0** — Initial release: selection, inline text editing, font/style panel, describe-a-style (NL → CSS), element-aware suggestions, add/remove elements palette, image handling, CSS rule editor, full undo/redo, multi-select, clean save.

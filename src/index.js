@@ -1,4 +1,4 @@
-import { ROOT_ID, ATTR_IGNORE } from './core/constants.js';
+import { ROOT_ID, ATTR_IGNORE, EMBED_PARAM } from './core/constants.js';
 import { createConfig } from './core/config.js';
 import { createEditorState } from './core/editor-state.js';
 import { createModeController } from './dom/mode-controller.js';
@@ -15,10 +15,13 @@ import { createElementsPalette } from './ui/elements-palette.js';
 import { createImagePanel } from './ui/image-panel.js';
 import { createBreadcrumbBar } from './ui/breadcrumb-bar.js';
 import { createToastHost } from './ui/toast.js';
+import { createLauncher } from './ui/launcher.js';
+import { openEditorModal } from './ui/editor-modal.js';
 import { button } from './ui/dom-helpers.js';
 import { subscribe } from './core/editor-state.js';
 import { saveNow } from './save/save-client.js';
 import { getCleanHTML } from './serialize/html-serializer.js';
+import { isEditingText } from './dom/text-editor.js';
 import * as history from './core/history.js';
 
 let instance = null;
@@ -55,10 +58,23 @@ function init(options = {}) {
     : null;
   const toast = createToastHost(editorRoot);
 
+  // Running inside the editor-modal iframe? The host set an expando bridge on
+  // our <iframe> element before assigning src (see ui/editor-modal.js).
+  const win = doc.defaultView;
+  const bridge = (config.embedded && win && win.frameElement && win.frameElement.__etchrBridge) || null;
+
   const confirmBeforeSave = config.confirmBeforeSave !== undefined ? config.confirmBeforeSave : !config.onSave;
-  const doSave = () => saveNow(state, toast, { confirmOverwrite: confirmBeforeSave });
+  const doSave = async () => {
+    const ok = await saveNow(state, toast, { confirmOverwrite: confirmBeforeSave });
+    if (ok && bridge) bridge.notifySaved();
+    return ok;
+  };
   installKeyboardShortcuts(state, { onSave: doSave });
-  const mainToolbar = createMainToolbar(state, modeController, { onSave: doSave });
+  const mainToolbar = createMainToolbar(state, modeController, {
+    onSave: doSave,
+    showModeToggle: config.allowModeToggle !== false,
+    showSave: !config.embedded,
+  });
   const toolbar = createToolbar(state, modeController);
   const stylePanel = createStylePanel(state);
   const cssPanel = createCssPanel(state);
@@ -113,7 +129,9 @@ function init(options = {}) {
   mainToolbar.appendButton(addBtn);
 
   // Escape closes whichever floating UI is open, in priority order, before
-  // falling back to clearing the selection — never more than one thing per press.
+  // falling back to clearing the selection — never more than one thing per
+  // press. In embedded mode, an Escape with nothing left to dismiss asks the
+  // host modal to close.
   doc.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape' || !state.isEditModeEnabled) return;
     const openPanel = stylingPanels.find((p) => p.isOpen());
@@ -123,8 +141,14 @@ function init(options = {}) {
       palette.close();
     } else if (state.selectedElements.length) {
       modeController.clearSelection(state);
+    } else if (bridge) {
+      bridge.requestClose();
     }
   });
+
+  // Keep the host modal's Save button in sync with whether there is anything
+  // to save (dirty tracking lives in state.savedIndex vs state.currentIndex).
+  if (bridge) subscribe(state, () => bridge.notifyDirty(isDirty()));
 
   if (config.startInEditMode) modeController.enable();
 
@@ -163,6 +187,42 @@ function getState() {
   return instance ? instance.state : null;
 }
 
+function getInstance() {
+  return instance;
+}
+
+// True when there are edits the user hasn't saved. An open contenteditable
+// session counts as dirty even before it commits — conservative, but closing
+// mid-edit should always warn.
+function isDirty() {
+  if (!instance) return false;
+  const s = instance.state;
+  return s.currentIndex !== s.savedIndex || isEditingText();
+}
+
+// ---- Host-page launcher (pencil button) + editor modal ----
+
+let launcher = null;
+
+// Opens the editor modal: the current page reloaded in a same-origin iframe
+// with the embed flag, where auto-init boots the editor in embedded mode.
+function openEditor() {
+  const editorRoot = ensureEditorRoot(document);
+  const url = new URL(document.defaultView.location.href);
+  url.searchParams.set(EMBED_PARAM, '1');
+  if (launcher) launcher.setOpen(true);
+  return openEditorModal(editorRoot, {
+    url: url.toString(),
+    onFullyClosed: () => { if (launcher) launcher.setOpen(false); },
+  });
+}
+
+function mountLauncher() {
+  if (launcher) return launcher;
+  launcher = createLauncher(ensureEditorRoot(document), { onOpen: openEditor });
+  return launcher;
+}
+
 // Capture the embedding <script> synchronously: document.currentScript is only
 // valid during initial execution, and becomes null inside a deferred callback.
 const embeddingScript = typeof document !== 'undefined' ? document.currentScript : null;
@@ -170,9 +230,29 @@ const embeddingScript = typeof document !== 'undefined' ? document.currentScript
 function autoInit() {
   const script = embeddingScript;
   if (script && script.dataset.autoInit === 'false') return;
+  // data-mode: 'launcher' (default) shows only the pencil button and edits in
+  // a modal; 'inline' is the pre-modal behavior (editor directly on the page);
+  // 'off' disables auto-init entirely (same as data-auto-init="false").
+  const mode = (script && script.dataset.mode) || 'launcher';
+  if (mode === 'off') return;
   const options = {};
   if (script && script.dataset.saveEndpoint) options.saveEndpoint = script.dataset.saveEndpoint;
-  init(options);
+
+  const isEmbedded = new URLSearchParams(window.location.search).has(EMBED_PARAM);
+  if (isEmbedded) {
+    init({
+      ...options,
+      embedded: true,
+      startInEditMode: true,
+      paletteSide: 'left',
+      confirmBeforeSave: false, // the host's Save click is already deliberate
+      allowModeToggle: false, // "edit mode off inside the modal" is a dead state
+    });
+  } else if (mode === 'inline') {
+    init(options);
+  } else {
+    mountLauncher();
+  }
 }
 
 if (typeof document !== 'undefined') {
@@ -183,4 +263,4 @@ if (typeof document !== 'undefined') {
   }
 }
 
-export { init, getState };
+export { init, getState, getInstance, isDirty, openEditor };

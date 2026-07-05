@@ -20,8 +20,11 @@ var VisualEditor = (() => {
   // src/index.js
   var index_exports = {};
   __export(index_exports, {
+    getInstance: () => getInstance,
     getState: () => getState,
-    init: () => init
+    init: () => init,
+    isDirty: () => isDirty,
+    openEditor: () => openEditor
   });
 
   // src/core/constants.js
@@ -30,6 +33,7 @@ var VisualEditor = (() => {
   var ATTR_IGNORE = "data-vve-ignore";
   var ATTR_EDITING = "data-vve-editing";
   var ATTR_CREATED_SHEET = "data-vve-created-sheet";
+  var EMBED_PARAM = "__etchr";
   var cls = (name) => `${CLASS_PREFIX}${name}`;
 
   // src/core/config.js
@@ -64,6 +68,14 @@ var VisualEditor = (() => {
       // this can be set explicitly either way.
       confirmBeforeSave: void 0,
       startInEditMode: false,
+      // Running inside the editor-modal iframe: trims the in-page chrome (no
+      // Enable/Exit toggle, no in-page Save — the modal header owns saving).
+      embedded: false,
+      // Which screen edge the elements palette docks to: 'right' | 'left'.
+      paletteSide: "right",
+      // Set false to remove the Enable/Exit editing toggle and the Ctrl/Cmd+E
+      // shortcut (used in embedded mode, where exiting edit mode is a dead state).
+      allowModeToggle: true,
       debounceMs: DEFAULT_DEBOUNCE_MS,
       // Resize handles on the selection outline, and whether resizing an
       // element auto-injects reflow fixes + @media breakpoint rules so layout
@@ -97,6 +109,10 @@ var VisualEditor = (() => {
       hoveredElement: null,
       history: [],
       currentIndex: -1,
+      // history index at the last successful save; currentIndex !== savedIndex
+      // means there are unsaved changes (undoing back to the saved point counts
+      // as clean again).
+      savedIndex: -1,
       editableStylesheet: null,
       stylesheetCache: {
         signature: 0,
@@ -321,12 +337,14 @@ var VisualEditor = (() => {
       if (attached) disable();
       else enable();
     }
-    doc.addEventListener("keydown", (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
-        e.preventDefault();
-        toggle();
-      }
-    });
+    if (state.config.allowModeToggle !== false) {
+      doc.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
+          e.preventDefault();
+          toggle();
+        }
+      });
+    }
     return { enable, disable, toggle, selectElement, toggleSelectElement, clearSelection, overlay, isEnabled: () => attached };
   }
 
@@ -573,18 +591,18 @@ var VisualEditor = (() => {
   function splitSelectorList(selectorText) {
     const parts = [];
     let depth = 0;
-    let current = "";
+    let current2 = "";
     for (const ch of selectorText) {
       if (ch === "(" || ch === "[") depth++;
       else if (ch === ")" || ch === "]") depth = Math.max(0, depth - 1);
       if (ch === "," && depth === 0) {
-        parts.push(current.trim());
-        current = "";
+        parts.push(current2.trim());
+        current2 = "";
       } else {
-        current += ch;
+        current2 += ch;
       }
     }
-    if (current.trim()) parts.push(current.trim());
+    if (current2.trim()) parts.push(current2.trim());
     return parts;
   }
   function computeSpecificity(selector) {
@@ -1549,13 +1567,17 @@ var VisualEditor = (() => {
   }
 
   // src/ui/main-toolbar.js
-  function createMainToolbar(state, modeController, { onSave } = {}) {
+  function createMainToolbar(state, modeController, { onSave, showModeToggle = true, showSave = true } = {}) {
     const doc = state.editorRoot.ownerDocument;
     const bar = createEl(doc, "div", {
       className: cls("main-toolbar"),
       attrs: { [ATTR_IGNORE]: "", role: "toolbar", "aria-label": "Editor toolbar" }
     });
-    const modeToggle = button(doc, "Enable editing", () => modeController.toggle());
+    let modeToggle = null;
+    if (showModeToggle) {
+      modeToggle = button(doc, "Enable editing", () => modeController.toggle());
+      bar.appendChild(modeToggle);
+    }
     const undoBtn = button(doc, "Undo", () => {
       commitActiveEdit();
       undo(state);
@@ -1564,18 +1586,19 @@ var VisualEditor = (() => {
       commitActiveEdit();
       redo(state);
     });
-    bar.appendChild(modeToggle);
     bar.appendChild(undoBtn);
     bar.appendChild(redoBtn);
     let saveBtn = null;
-    if (onSave) {
+    if (onSave && showSave) {
       saveBtn = button(doc, "Save", onSave, cls("btn-active"));
       bar.appendChild(saveBtn);
     }
     state.editorRoot.appendChild(bar);
     subscribe(state, () => {
-      modeToggle.textContent = state.isEditModeEnabled ? "Exit editing" : "Enable editing";
-      modeToggle.classList.toggle(cls("btn-active"), state.isEditModeEnabled);
+      if (modeToggle) {
+        modeToggle.textContent = state.isEditModeEnabled ? "Exit editing" : "Enable editing";
+        modeToggle.classList.toggle(cls("btn-active"), state.isEditModeEnabled);
+      }
       undoBtn.disabled = !canUndo(state);
       redoBtn.disabled = !canRedo(state);
     });
@@ -2695,8 +2718,9 @@ var VisualEditor = (() => {
   }
   function createElementsPalette(state, modeController, hooks = {}) {
     const doc = state.editorRoot.ownerDocument;
+    const side = state.config.paletteSide === "left" ? "left" : "right";
     const panel = createEl(doc, "aside", {
-      className: cls("palette"),
+      className: `${cls("palette")} ${cls(`palette-${side}`)}`,
       attrs: { [ATTR_IGNORE]: "", role: "region", "aria-label": "Add elements panel" }
     });
     const tab = createEl(doc, "button", {
@@ -2731,7 +2755,7 @@ var VisualEditor = (() => {
     function setCollapsed(next) {
       collapsed = next;
       panel.classList.toggle(cls("palette-collapsed"), collapsed);
-      state.editorRoot.classList.toggle(cls("palette-open"), !collapsed);
+      if (side === "right") state.editorRoot.classList.toggle(cls("palette-open"), !collapsed);
       tab.setAttribute("aria-expanded", String(!collapsed));
     }
     setCollapsed(true);
@@ -3063,6 +3087,250 @@ var VisualEditor = (() => {
     };
   }
 
+  // src/ui/icons.js
+  var icons = {
+    pencil: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <path d="M3 17.25V21h3.75L17.81 10.19l-3.75-3.75L3 17.25z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="#fff" stroke="#111" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="M12.56 7.94l3.75 3.75M11.06 9.44l3.75 3.75" stroke="#111" stroke-width="1.6"/>
+  </svg>`,
+    close: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"/>
+  </svg>`,
+    maximize: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <rect x="5" y="5" width="14" height="14" stroke="currentColor" stroke-width="2.4"/>
+  </svg>`,
+    restore: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">
+    <path d="M9 9h10v10H9z" stroke="currentColor" stroke-width="2.2"/>
+    <path d="M5 15V5h10" stroke="currentColor" stroke-width="2.2"/>
+  </svg>`
+  };
+  function svg(doc, name, size = 20) {
+    const wrap = doc.createElement("span");
+    wrap.innerHTML = icons[name];
+    const el = wrap.firstElementChild;
+    el.setAttribute("width", String(size));
+    el.setAttribute("height", String(size));
+    return el;
+  }
+
+  // src/ui/launcher.js
+  function createLauncher(editorRoot, { onOpen }) {
+    const doc = editorRoot.ownerDocument;
+    const btn = createEl(doc, "button", {
+      className: cls("launcher"),
+      attrs: { type: "button", [ATTR_IGNORE]: "", "aria-label": "Edit this page", title: "Edit this page" }
+    });
+    btn.appendChild(svg(doc, "pencil", 28));
+    btn.addEventListener("click", () => onOpen());
+    editorRoot.appendChild(btn);
+    return {
+      el: btn,
+      // Disabled while the modal is open (double-open guard); re-enabled and
+      // refocused when the modal fully closes.
+      setOpen(open) {
+        btn.disabled = open;
+        if (!open) btn.focus();
+      },
+      destroy: () => btn.remove()
+    };
+  }
+
+  // src/ui/confirm-dialog.js
+  function confirmDialog(editorRoot, {
+    title = "Unsaved changes",
+    message,
+    confirmLabel = "OK",
+    cancelLabel = "Cancel",
+    danger = false
+  } = {}) {
+    const doc = editorRoot.ownerDocument;
+    return new Promise((resolve) => {
+      const backdrop = createEl(doc, "div", {
+        className: cls("confirm-backdrop"),
+        attrs: { [ATTR_IGNORE]: "" }
+      });
+      const card = createEl(doc, "div", {
+        className: cls("confirm"),
+        attrs: { [ATTR_IGNORE]: "", role: "alertdialog", "aria-modal": "true", "aria-label": title }
+      });
+      card.appendChild(createEl(doc, "div", { className: cls("confirm-header"), text: title }));
+      card.appendChild(createEl(doc, "div", { className: cls("confirm-message"), text: message }));
+      const actions = createEl(doc, "div", { className: cls("confirm-actions") });
+      const cancelBtn = button(doc, cancelLabel, () => settle(false));
+      const confirmBtn = button(doc, confirmLabel, () => settle(true), danger ? cls("btn-danger") : cls("btn-primary"));
+      actions.appendChild(cancelBtn);
+      actions.appendChild(confirmBtn);
+      card.appendChild(actions);
+      function onKeydown(e) {
+        if (e.key !== "Escape") return;
+        e.stopPropagation();
+        e.preventDefault();
+        settle(false);
+      }
+      doc.addEventListener("keydown", onKeydown, true);
+      function settle(result) {
+        doc.removeEventListener("keydown", onKeydown, true);
+        backdrop.remove();
+        card.remove();
+        resolve(result);
+      }
+      editorRoot.appendChild(backdrop);
+      editorRoot.appendChild(card);
+      cancelBtn.focus();
+    });
+  }
+
+  // src/ui/editor-modal.js
+  var current = null;
+  function openEditorModal(editorRoot, { url, onFullyClosed }) {
+    if (current) return current;
+    const doc = editorRoot.ownerDocument;
+    const win = doc.defaultView;
+    const backdrop = createEl(doc, "div", {
+      className: cls("modal-backdrop"),
+      attrs: { [ATTR_IGNORE]: "" }
+    });
+    const modal = createEl(doc, "div", {
+      className: cls("modal"),
+      attrs: { [ATTR_IGNORE]: "", role: "dialog", "aria-modal": "true", "aria-label": "Edit page" }
+    });
+    const header = createEl(doc, "div", { className: cls("modal-header") });
+    header.appendChild(createEl(doc, "div", { className: cls("modal-title"), text: "Edit page" }));
+    const actions = createEl(doc, "div", { className: cls("modal-actions") });
+    const saveBtn = button(doc, "Save", onSaveClick, cls("btn-primary"));
+    saveBtn.disabled = true;
+    let maximized = false;
+    const maxBtn = button(doc, "", onMaximizeClick, cls("modal-iconbtn"));
+    maxBtn.setAttribute("aria-label", "Maximize");
+    maxBtn.title = "Maximize";
+    maxBtn.appendChild(svg(doc, "maximize", 16));
+    const closeBtn = button(doc, "", () => {
+      attemptClose();
+    }, cls("modal-iconbtn"));
+    closeBtn.setAttribute("aria-label", "Close editor");
+    closeBtn.title = "Close";
+    closeBtn.appendChild(svg(doc, "close", 16));
+    actions.appendChild(saveBtn);
+    actions.appendChild(maxBtn);
+    actions.appendChild(closeBtn);
+    header.appendChild(actions);
+    modal.appendChild(header);
+    const body = createEl(doc, "div", { className: cls("modal-body") });
+    const iframe = createEl(doc, "iframe", {
+      className: cls("modal-frame"),
+      attrs: { title: "Page editor" }
+    });
+    body.appendChild(iframe);
+    modal.appendChild(body);
+    let editorInstance = null;
+    let didSave = false;
+    let confirming = false;
+    iframe.__etchrBridge = {
+      requestClose: () => attemptClose(),
+      notifyDirty: (dirty) => saveBtn.classList.toggle(cls("btn-attention"), dirty),
+      notifySaved: () => {
+        didSave = true;
+      }
+    };
+    iframe.src = url;
+    const loadTimeout = win.setTimeout(() => {
+      if (!editorInstance) showError();
+    }, 12e3);
+    iframe.addEventListener("load", () => {
+      win.clearTimeout(loadTimeout);
+      const api = editorApi();
+      editorInstance = api && api.getInstance ? api.getInstance() : null;
+      if (editorInstance) saveBtn.disabled = false;
+      else showError();
+    });
+    function editorApi() {
+      try {
+        return iframe.contentWindow ? iframe.contentWindow.VisualEditor : null;
+      } catch {
+        return null;
+      }
+    }
+    function showError() {
+      editorInstance = null;
+      saveBtn.disabled = true;
+      iframe.remove();
+      const panel = createEl(doc, "div", { className: cls("modal-error") });
+      panel.appendChild(createEl(doc, "div", { text: "Couldn't load the editor for this page." }));
+      panel.appendChild(button(doc, "Close", () => teardown()));
+      body.appendChild(panel);
+    }
+    async function onSaveClick() {
+      if (!editorInstance) return;
+      saveBtn.disabled = true;
+      const prevLabel = saveBtn.textContent;
+      saveBtn.textContent = "Saving\u2026";
+      try {
+        await editorInstance.save();
+      } finally {
+        saveBtn.textContent = prevLabel;
+        saveBtn.disabled = false;
+      }
+    }
+    function onMaximizeClick() {
+      maximized = !maximized;
+      modal.classList.toggle(cls("modal-max"), maximized);
+      maxBtn.replaceChild(svg(doc, maximized ? "restore" : "maximize", 16), maxBtn.firstElementChild);
+      const label = maximized ? "Restore size" : "Maximize";
+      maxBtn.setAttribute("aria-label", label);
+      maxBtn.title = label;
+    }
+    function isDirtySafe() {
+      const api = editorApi();
+      try {
+        return !!(api && api.isDirty && api.isDirty());
+      } catch {
+        return false;
+      }
+    }
+    async function attemptClose() {
+      if (confirming) return;
+      if (isDirtySafe()) {
+        confirming = true;
+        const discard = await confirmDialog(editorRoot, {
+          title: "Unsaved changes",
+          message: "Are you sure you want to close? There are unsaved changes.",
+          confirmLabel: "Close without saving",
+          cancelLabel: "Keep editing",
+          danger: true
+        });
+        confirming = false;
+        if (!discard) return;
+      }
+      teardown();
+    }
+    function onHostKeydown(e) {
+      if (e.key === "Escape") attemptClose();
+    }
+    function onBeforeUnload(e) {
+      if (isDirtySafe()) e.preventDefault();
+    }
+    doc.addEventListener("keydown", onHostKeydown);
+    win.addEventListener("beforeunload", onBeforeUnload);
+    const prevOverflow = doc.body.style.overflow;
+    doc.body.style.overflow = "hidden";
+    function teardown() {
+      doc.removeEventListener("keydown", onHostKeydown);
+      win.removeEventListener("beforeunload", onBeforeUnload);
+      doc.body.style.overflow = prevOverflow;
+      backdrop.remove();
+      modal.remove();
+      current = null;
+      if (onFullyClosed) onFullyClosed();
+      if (didSave) win.location.reload();
+    }
+    editorRoot.appendChild(backdrop);
+    editorRoot.appendChild(modal);
+    closeBtn.focus();
+    current = { close: (force) => force ? teardown() : attemptClose(), isOpen: () => current !== null };
+    return current;
+  }
+
   // src/serialize/html-serializer.js
   var CONTENT_MARKER_ATTRS = [ATTR_EDITING, ATTR_CREATED_SHEET, "contenteditable"];
   function getCleanHTML(doc) {
@@ -3091,9 +3359,10 @@ ${clone.outerHTML}`;
     commitActiveEdit();
     const doc = state.root.ownerDocument;
     const html = getCleanHTML(doc);
+    const indexAtSerialize = state.currentIndex;
     if (confirmOverwrite) {
       const win = doc.defaultView;
-      if (!win.confirm("Save changes? This will overwrite the existing content.")) return;
+      if (!win.confirm("Save changes? This will overwrite the existing content.")) return false;
     }
     try {
       if (state.config.onSave) {
@@ -3114,9 +3383,13 @@ ${clone.outerHTML}`;
           throw new Error(message);
         }
       }
+      state.savedIndex = indexAtSerialize;
+      notify(state);
       toast.success("Saved.");
+      return true;
     } catch (err) {
       toast.error(`Save failed: ${err && err.message ? err.message : err}`);
+      return false;
     }
   }
 
@@ -3144,10 +3417,20 @@ ${clone.outerHTML}`;
     const moveController = config.enableMove !== false ? createMoveController(state, modeController, config) : null;
     const contextMenu = config.enableLayering !== false ? createContextMenu(state, modeController) : null;
     const toast = createToastHost(editorRoot);
+    const win = doc.defaultView;
+    const bridge = config.embedded && win && win.frameElement && win.frameElement.__etchrBridge || null;
     const confirmBeforeSave = config.confirmBeforeSave !== void 0 ? config.confirmBeforeSave : !config.onSave;
-    const doSave = () => saveNow(state, toast, { confirmOverwrite: confirmBeforeSave });
+    const doSave = async () => {
+      const ok = await saveNow(state, toast, { confirmOverwrite: confirmBeforeSave });
+      if (ok && bridge) bridge.notifySaved();
+      return ok;
+    };
     installKeyboardShortcuts(state, { onSave: doSave });
-    const mainToolbar = createMainToolbar(state, modeController, { onSave: doSave });
+    const mainToolbar = createMainToolbar(state, modeController, {
+      onSave: doSave,
+      showModeToggle: config.allowModeToggle !== false,
+      showSave: !config.embedded
+    });
     const toolbar = createToolbar(state, modeController);
     const stylePanel = createStylePanel(state);
     const cssPanel = createCssPanel(state);
@@ -3192,8 +3475,11 @@ ${clone.outerHTML}`;
         palette.close();
       } else if (state.selectedElements.length) {
         modeController.clearSelection(state);
+      } else if (bridge) {
+        bridge.requestClose();
       }
     });
+    if (bridge) subscribe(state, () => bridge.notifyDirty(isDirty()));
     if (config.startInEditMode) modeController.enable();
     instance = {
       state,
@@ -3228,13 +3514,57 @@ ${clone.outerHTML}`;
   function getState() {
     return instance ? instance.state : null;
   }
+  function getInstance() {
+    return instance;
+  }
+  function isDirty() {
+    if (!instance) return false;
+    const s = instance.state;
+    return s.currentIndex !== s.savedIndex || isEditingText();
+  }
+  var launcher = null;
+  function openEditor() {
+    const editorRoot = ensureEditorRoot(document);
+    const url = new URL(document.defaultView.location.href);
+    url.searchParams.set(EMBED_PARAM, "1");
+    if (launcher) launcher.setOpen(true);
+    return openEditorModal(editorRoot, {
+      url: url.toString(),
+      onFullyClosed: () => {
+        if (launcher) launcher.setOpen(false);
+      }
+    });
+  }
+  function mountLauncher() {
+    if (launcher) return launcher;
+    launcher = createLauncher(ensureEditorRoot(document), { onOpen: openEditor });
+    return launcher;
+  }
   var embeddingScript = typeof document !== "undefined" ? document.currentScript : null;
   function autoInit() {
     const script = embeddingScript;
     if (script && script.dataset.autoInit === "false") return;
+    const mode = script && script.dataset.mode || "launcher";
+    if (mode === "off") return;
     const options = {};
     if (script && script.dataset.saveEndpoint) options.saveEndpoint = script.dataset.saveEndpoint;
-    init(options);
+    const isEmbedded = new URLSearchParams(window.location.search).has(EMBED_PARAM);
+    if (isEmbedded) {
+      init({
+        ...options,
+        embedded: true,
+        startInEditMode: true,
+        paletteSide: "left",
+        confirmBeforeSave: false,
+        // the host's Save click is already deliberate
+        allowModeToggle: false
+        // "edit mode off inside the modal" is a dead state
+      });
+    } else if (mode === "inline") {
+      init(options);
+    } else {
+      mountLauncher();
+    }
   }
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") {

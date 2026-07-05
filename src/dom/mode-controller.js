@@ -98,12 +98,14 @@ export function createModeController(state) {
     else enable();
   }
 
-  doc.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
-      e.preventDefault();
-      toggle();
-    }
-  });
+  if (state.config.allowModeToggle !== false) {
+    doc.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
+        e.preventDefault();
+        toggle();
+      }
+    });
+  }
 
   return { enable, disable, toggle, selectElement, toggleSelectElement, clearSelection, overlay, isEnabled: () => attached };
 }

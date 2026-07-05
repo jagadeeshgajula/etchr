@@ -12,15 +12,22 @@
   .card { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin: 16px 0; background: #fafafa; }
   .card h2 { color: #2f6fed; font-size: 22px; }
 </style>
-<style></style></head>
-<body style="">
+<style></style><style>@media (max-width: 768px) {
+  .vve-r3 { box-sizing: border-box; width: 100%; max-width: 392px; }
+  .vve-r3 { box-sizing: border-box; width: 100%; max-width: 392px; margin-left: 0px; margin-right: 0px; }
+  .vve-r4 { box-sizing: border-box; width: 100%; max-width: 303px; }
+}
+@media (max-width: 480px) {
+  .vve-r4 { box-sizing: border-box; width: 100%; max-width: 303px; }
+}</style></head>
+<body style="border: 2px solid rgb(203, 213, 225); border-radius: 16px; padding: 16px; overflow: hidden;">
   <h1>Welcome to the Visual Editor Demo</h1>
-  <p class="vve-r3" style="width: 264.444px; height: 332.274px; max-width: 100%; margin-left: 411.111px; margin-top: 22.6667px;">This is a sample paragraph you can select and edit. Click "Enable editing" in the top-right corner, then use the "Elements" tab on the right edge to add new elements. Click "Save" (or Ctrl+S) to write your changes back to this file on disk — reload the page afterward to confirm they persisted. Shift+click to select multiple elements at once and batch-edit their styles or delete them together; the breadcrumb bar at the bottom shows the selected element's ancestry.</p>
-  <div class="card vve-r2" style="width: 255.556px; height: 227.691px; max-width: 100%;">
+  <p class="vve-r3" style="width: 392.205px; height: 253.368px; max-width: 100%; margin-left: 283.333px; margin-top: 22.6667px;">This is a sample paragraph you can select and edit. Click the pencil button in the top-right corner to open the editor popup, then use the "Elements" tab on the left edge to add new elements. Click "Save" (or Ctrl+S) to write your changes back to this file on disk — closing the popup reloads the page with what you saved. Shift+click to select multiple elements at once and batch-edit their styles or delete them together; the breadcrumb bar at the bottom shows the selected element's ancestry.</p>
+  <div class="card vve-r2" style="width: 255.556px; height: 227.691px; max-width: 100%; box-sizing: border-box; margin: 0px; position: absolute; left: 716.094px; top: 152.205px;">
     <h2 class="vve-r1" style="width: 171.354px; max-width: 100%;">A card section</h2>
     <p>Cards can hold headings, paragraphs, images, and other content. Select this card, then add an Image from the Elements panel to drop one inside it.</p>
   </div>
-  <p style="text-align: center; color: rgb(107, 114, 128); letter-spacing: 1px;">Another standalone paragraph at the bottom of the page.</p>
+  <p style="text-align: center; color: rgb(107, 114, 128); letter-spacing: 1px; box-sizing: border-box; width: 680px; height: 23.9931px; margin: 0px; position: absolute; left: 712.222px; top: 487.76px;">Another standalone paragraph at the bottom of the page.</p><hr><p></p>
 
   <link rel="stylesheet" href="/dist/editor.css">
   <script src="/dist/editor.js"></script>

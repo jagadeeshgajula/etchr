@@ -1,19 +1,24 @@
 import { getCleanHTML } from '../serialize/html-serializer.js';
 import { commitActiveEdit } from '../dom/text-editor.js';
+import { notify } from '../core/editor-state.js';
 
 /**
  * Runs the save flow: force-commits any pending text edit, serializes the
  * clean HTML, and routes it to config.onSave (if provided) or the default
  * /save-page endpoint. Shows a success/error toast either way.
+ * Resolves true on success, false on decline/error.
  */
 export async function saveNow(state, toast, { confirmOverwrite = false } = {}) {
   commitActiveEdit();
   const doc = state.root.ownerDocument;
   const html = getCleanHTML(doc);
+  // Captured alongside the serialize: edits made while the request is in
+  // flight must still read as unsaved afterwards.
+  const indexAtSerialize = state.currentIndex;
 
   if (confirmOverwrite) {
     const win = doc.defaultView;
-    if (!win.confirm('Save changes? This will overwrite the existing content.')) return;
+    if (!win.confirm('Save changes? This will overwrite the existing content.')) return false;
   }
 
   try {
@@ -36,8 +41,12 @@ export async function saveNow(state, toast, { confirmOverwrite = false } = {}) {
         throw new Error(message);
       }
     }
+    state.savedIndex = indexAtSerialize;
+    notify(state);
     toast.success('Saved.');
+    return true;
   } catch (err) {
     toast.error(`Save failed: ${err && err.message ? err.message : err}`);
+    return false;
   }
 }

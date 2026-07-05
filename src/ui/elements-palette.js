@@ -30,13 +30,14 @@ function resolvePlacement(state) {
 
 export function createElementsPalette(state, modeController, hooks = {}) {
   const doc = state.editorRoot.ownerDocument;
+  const side = state.config.paletteSide === 'left' ? 'left' : 'right';
 
   const panel = createEl(doc, 'aside', {
-    className: cls('palette'),
+    className: `${cls('palette')} ${cls(`palette-${side}`)}`,
     attrs: { [ATTR_IGNORE]: '', role: 'region', 'aria-label': 'Add elements panel' },
   });
 
-  // Collapse/expand tab (always visible on the right edge).
+  // Collapse/expand tab (always visible on the panel's inner edge).
   const tab = createEl(doc, 'button', {
     className: cls('palette-tab'),
     attrs: { type: 'button', [ATTR_IGNORE]: '', 'aria-label': 'Toggle elements panel' },
@@ -73,8 +74,9 @@ export function createElementsPalette(state, modeController, hooks = {}) {
   function setCollapsed(next) {
     collapsed = next;
     panel.classList.toggle(cls('palette-collapsed'), collapsed);
-    // Shift the main toolbar clear of the open panel (see editor.css).
-    state.editorRoot.classList.toggle(cls('palette-open'), !collapsed);
+    // Shift the main toolbar clear of the open panel (see editor.css). Only
+    // the right dock overlaps the top-right toolbar; the left dock doesn't.
+    if (side === 'right') state.editorRoot.classList.toggle(cls('palette-open'), !collapsed);
     tab.setAttribute('aria-expanded', String(!collapsed));
   }
   setCollapsed(true);
